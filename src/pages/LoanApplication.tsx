@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -16,7 +15,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Home, User, Phone, Mail, FileText, CreditCard } from 'lucide-react';
+import { Home, User, Phone, Mail, FileText, DollarSign } from 'lucide-react';
 
 const LoanApplicationForm = () => {
   const { toast } = useToast();
@@ -79,27 +78,9 @@ const LoanApplicationForm = () => {
       return;
     }
     
-    // Submit application
-    try {
-      submitLoanApplication({
-        ...formData
-      });
-      
-      // Show success message
-      toast({
-        title: "Demande Soumise",
-        description: "Votre demande a été soumise avec succès. Procédez au paiement pour l'analyse de votre dossier.",
-      });
-      
-      // Redirect to payment page
-      navigate('/paiement');
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la soumission de votre demande.",
-        variant: "destructive"
-      });
-    }
+    // Proceed to payment page
+    // The actual form submission will happen after successful payment
+    navigate('/paiement');
   };
 
   // Calculate monthly payment
@@ -354,10 +335,10 @@ const LoanApplicationForm = () => {
           
           <CardFooter className="flex flex-col space-y-4">
             <p className="text-sm text-gray-500 italic">
-              Des frais d'analyse de dossier de 1 000 HTG seront appliqués. Ces frais sont non remboursables.
+              Un frais d'analyse de dossier de 1 000 HTG sera appliqué. Ces frais sont non remboursables.
             </p>
             <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-              <CreditCard className="mr-2 h-4 w-4" /> Soumettre et Procéder au Paiement
+              <DollarSign className="mr-2 h-4 w-4" /> Soumettre la Demande
             </Button>
           </CardFooter>
         </form>

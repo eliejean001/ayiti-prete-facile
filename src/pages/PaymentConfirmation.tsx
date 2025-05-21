@@ -12,11 +12,10 @@ const PaymentConfirmation = () => {
           <CheckCircle className="h-16 w-16 text-green-600" />
         </div>
         
-        <h1 className="text-3xl font-bold text-primary">Paiement Réussi!</h1>
+        <h1 className="text-3xl font-bold text-primary">Demande Enregistrée!</h1>
         
         <p className="text-gray-600 mb-8">
-          Votre paiement de 1 000 HTG a été traité avec succès. Nous avons reçu votre demande de prêt
-          et notre équipe va l'analyser dans les plus brefs délais.
+          Votre demande de prêt a été enregistrée avec succès. Notre équipe va l'analyser dans les plus brefs délais.
         </p>
         
         <div className="bg-gray-50 p-6 rounded-lg w-full text-left">

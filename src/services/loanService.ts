@@ -7,13 +7,14 @@ let loanApplications: LoanApplication[] = [];
 // Generate a simple ID
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
+// This will be called after successful payment
 export const submitLoanApplication = (application: Omit<LoanApplication, "id" | "createdAt" | "status" | "paymentStatus" | "interestRate">) => {
   const newApplication: LoanApplication = {
     id: generateId(),
     ...application,
     createdAt: new Date(),
     status: "pending",
-    paymentStatus: "pending",
+    paymentStatus: "completed", // Now marking as completed since we're skipping the payment step
     interestRate: calculateInterestRate(application.amount, application.duration)
   };
   
