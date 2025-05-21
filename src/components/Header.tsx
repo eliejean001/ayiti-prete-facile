@@ -62,15 +62,6 @@ const Header: React.FC = () => {
                         Demander un Prêt
                       </Link>
                     </li>
-                    <li>
-                      <Link 
-                        to="/admin" 
-                        className="block py-2 hover:text-secondary transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Admin
-                      </Link>
-                    </li>
                   </ul>
                 </nav>
               </div>
@@ -92,11 +83,6 @@ const Header: React.FC = () => {
               <li>
                 <Link to="/demande" className="hover:text-secondary transition-colors">
                   Demander un Prêt
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin" className="hover:text-secondary transition-colors">
-                  Admin
                 </Link>
               </li>
             </ul>
