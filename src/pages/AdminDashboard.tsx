@@ -12,7 +12,8 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { isAuthenticated, logoutAdmin } from '@/services/authService';
-import { getAllApplications, LoanApplication } from '@/services/loanService';
+import { getAllApplications } from '@/services/loanService';
+import { LoanApplication } from '@/types/loan';
 import { Download, LogOut } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 
