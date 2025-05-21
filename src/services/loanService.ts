@@ -14,7 +14,7 @@ export const submitLoanApplication = (application: Omit<LoanApplication, "id" | 
     ...application,
     createdAt: new Date(),
     status: "pending",
-    paymentStatus: "completed", // Now marking as completed since we're skipping the payment step
+    paymentStatus: "paid", // Changed from "completed" to "paid" to match the type definition
     interestRate: calculateInterestRate(application.amount, application.duration)
   };
   
