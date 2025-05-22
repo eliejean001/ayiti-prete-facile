@@ -67,7 +67,9 @@ const AdminDashboard = () => {
   const handleMarkAsPaid = async (applicationId: string) => {
     setIsUpdating(true);
     try {
+      console.log("Marking application as paid:", applicationId);
       const updatedApplication = await updatePaymentStatus(applicationId, 'paid');
+      
       if (updatedApplication) {
         toast({
           title: "Paiement Confirmé",
@@ -272,10 +274,6 @@ const AdminDashboard = () => {
                           <td className="py-1 font-medium">Email:</td>
                           <td>{selectedApplication.email}</td>
                         </tr>
-                        <tr>
-                          <td className="py-1 font-medium">Emploi:</td>
-                          <td>{selectedApplication.employment}</td>
-                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -316,6 +314,58 @@ const AdminDashboard = () => {
                     </table>
                   </div>
                 </div>
+                
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Informations d'Emploi</h3>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-1 font-medium">Emploi:</td>
+                        <td>{selectedApplication.employment}</td>
+                      </tr>
+                      {selectedApplication.employerName && (
+                        <tr>
+                          <td className="py-1 font-medium">Nom de l'employeur:</td>
+                          <td>{selectedApplication.employerName}</td>
+                        </tr>
+                      )}
+                      {selectedApplication.employerPhone && (
+                        <tr>
+                          <td className="py-1 font-medium">Téléphone de l'employeur:</td>
+                          <td>{selectedApplication.employerPhone}</td>
+                        </tr>
+                      )}
+                      {selectedApplication.employerAddress && (
+                        <tr>
+                          <td className="py-1 font-medium">Adresse de l'employeur:</td>
+                          <td>{selectedApplication.employerAddress}</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {selectedApplication.referenceName && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold mb-2">Référence</h3>
+                    <table className="w-full text-sm">
+                      <tbody>
+                        <tr>
+                          <td className="py-1 font-medium">Nom de référence:</td>
+                          <td>{selectedApplication.referenceName}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium">Téléphone:</td>
+                          <td>{selectedApplication.referencePhone}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-1 font-medium">Adresse:</td>
+                          <td>{selectedApplication.referenceAddress}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
                 
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-2">Raison de la Demande</h3>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -15,7 +16,7 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { Home, User, Phone, Mail, FileText, DollarSign } from 'lucide-react';
+import { Home, User, Phone, Mail, FileText, DollarSign, Briefcase } from 'lucide-react';
 
 const LoanApplicationForm = () => {
   const { toast } = useToast();
@@ -27,26 +28,20 @@ const LoanApplicationForm = () => {
     address: '',
     phone: '',
     employment: '',
+    employerName: '',
+    employerPhone: '',
+    employerAddress: '',
     reason: '',
     duration: 12,
     amount: 100000,
+    interestRate: 5, // Default interest rate at 5%
     email: '',
     signatureFullName: '',
-    termsAccepted: false
+    termsAccepted: false,
+    referenceName: '',
+    referencePhone: '',
+    referenceAddress: ''
   });
-
-  // Calculate estimated interest rate based on amount and duration
-  const estimateInterestRate = () => {
-    let rate = 3;
-    if (formData.amount > 250000) rate += 2;
-    else if (formData.amount > 100000) rate += 1;
-    
-    if (formData.duration > 24) rate += 3;
-    else if (formData.duration > 12) rate += 2;
-    else if (formData.duration > 6) rate += 1;
-    
-    return Math.min(rate, 10);
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -84,7 +79,7 @@ const LoanApplicationForm = () => {
 
   // Calculate monthly payment
   const calculateMonthlyPayment = () => {
-    const interestRate = estimateInterestRate() / 100 / 12;
+    const interestRate = formData.interestRate / 100 / 12;
     const totalPayments = formData.duration;
     
     // Monthly payment formula: P = A * (r * (1+r)^n) / ((1+r)^n - 1)
@@ -178,25 +173,104 @@ const LoanApplicationForm = () => {
                   placeholder="votre.email@exemple.com"
                   required
                 />
-                <p className="text-sm text-gray-500">
-                  Envoyez votre carte d'identité nationale, 2 photos d'identité et une preuve d'adresse à cette adresse: <strong>documents@ayitiloan.ht</strong>
-                </p>
               </div>
             </div>
             
             {/* Employment Information */}
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary">Emploi</h3>
+              <h3 className="text-xl font-semibold text-primary">Informations d'Emploi</h3>
               <div className="space-y-2">
-                <Label htmlFor="employment">Situation Professionnelle</Label>
+                <Label htmlFor="employment" className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4" /> Situation Professionnelle
+                </Label>
                 <Input
                   id="employment"
                   name="employment"
                   value={formData.employment}
                   onChange={handleChange}
-                  placeholder="Employeur et poste actuel"
+                  placeholder="Poste actuel"
                   required
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="employerName">Nom de l'Employeur</Label>
+                <Input
+                  id="employerName"
+                  name="employerName"
+                  value={formData.employerName}
+                  onChange={handleChange}
+                  placeholder="Nom de l'entreprise"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="employerPhone">Téléphone de l'Employeur</Label>
+                  <Input
+                    id="employerPhone"
+                    name="employerPhone"
+                    value={formData.employerPhone}
+                    onChange={handleChange}
+                    placeholder="+509 XXXX XXXX"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="employerAddress">Adresse de l'Employeur</Label>
+                  <Input
+                    id="employerAddress"
+                    name="employerAddress"
+                    value={formData.employerAddress}
+                    onChange={handleChange}
+                    placeholder="Adresse de l'entreprise"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Reference Information */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary">Référence Personnelle</h3>
+              <div className="space-y-2">
+                <Label htmlFor="referenceName">Nom de la Référence</Label>
+                <Input
+                  id="referenceName"
+                  name="referenceName"
+                  value={formData.referenceName}
+                  onChange={handleChange}
+                  placeholder="Nom complet"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="referencePhone">Téléphone</Label>
+                  <Input
+                    id="referencePhone"
+                    name="referencePhone"
+                    value={formData.referencePhone}
+                    onChange={handleChange}
+                    placeholder="+509 XXXX XXXX"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="referenceAddress">Adresse</Label>
+                  <Input
+                    id="referenceAddress"
+                    name="referenceAddress"
+                    value={formData.referenceAddress}
+                    onChange={handleChange}
+                    placeholder="Adresse complète"
+                    required
+                  />
+                </div>
               </div>
             </div>
             
@@ -242,6 +316,25 @@ const LoanApplicationForm = () => {
                     <span>36 mois</span>
                   </div>
                 </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label htmlFor="interestRate">Taux d'Intérêt (%)</Label>
+                    <span className="font-semibold">{formData.interestRate}%</span>
+                  </div>
+                  <Slider
+                    id="interestRate"
+                    min={3}
+                    max={10}
+                    step={0.5}
+                    value={[formData.interestRate]}
+                    onValueChange={(value) => handleSliderChange('interestRate', value)}
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>3%</span>
+                    <span>10%</span>
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -270,8 +363,8 @@ const LoanApplicationForm = () => {
                 <div>Durée:</div>
                 <div className="font-semibold text-right">{formData.duration} mois</div>
                 
-                <div>Taux d'Intérêt Estimé:</div>
-                <div className="font-semibold text-right">{estimateInterestRate()}%</div>
+                <div>Taux d'Intérêt:</div>
+                <div className="font-semibold text-right">{formData.interestRate}%</div>
                 
                 <div>Paiement Mensuel Estimé:</div>
                 <div className="font-semibold text-right">{formatCurrency(calculateMonthlyPayment())}</div>
@@ -329,6 +422,9 @@ const LoanApplicationForm = () => {
                 placeholder="Tapez votre nom complet comme signature"
                 required
               />
+              <p className="text-sm text-gray-500">
+                Envoyez votre carte d'identité nationale, 2 photos d'identité et une preuve d'adresse à cette adresse: <strong>documents@ayitiloan.ht</strong>
+              </p>
             </div>
           </CardContent>
           

@@ -1,10 +1,9 @@
+
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
 // This will now submit applications with pending payment status by default
-export const submitLoanApplication = async (application: Omit<LoanApplication, "id" | "createdAt" | "status" | "paymentStatus" | "interestRate">) => {
-  const interestRate = calculateInterestRate(application.amount, application.duration);
-  
+export const submitLoanApplication = async (application: Omit<LoanApplication, "id" | "createdAt" | "status" | "paymentStatus">) => {
   console.log("Submitting application with payment status pending:", application);
   
   const { data, error } = await supabase
@@ -15,12 +14,15 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
       phone_number: application.phone,
       email: application.email,
       employment_status: application.employment,
+      employer: application.employerName || null,
+      job_title: application.employment || null,
       loan_purpose: application.reason,
       loan_duration: application.duration,
       loan_amount: application.amount,
-      interest_rate: interestRate,
+      interest_rate: application.interestRate,
       signature: application.signatureFullName,
-      payment_status: 'pending' // Default to pending for admin verification
+      payment_status: 'pending', // Default to pending for admin verification
+      other_income_sources: null
     })
     .select()
     .single();
@@ -38,6 +40,9 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
     phone: data.phone_number,
     email: data.email,
     employment: data.employment_status || "",
+    employerName: data.employer || "",
+    employerPhone: "", // These fields aren't in the DB yet
+    employerAddress: "",
     reason: data.loan_purpose,
     duration: data.loan_duration,
     amount: data.loan_amount,
@@ -45,7 +50,10 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
     signatureFullName: data.signature,
     createdAt: new Date(data.created_at),
     status: validateStatus(data.status),
-    paymentStatus: validatePaymentStatus(data.payment_status)
+    paymentStatus: validatePaymentStatus(data.payment_status),
+    referenceName: "",
+    referencePhone: "",
+    referenceAddress: ""
   };
   
   console.log("New application submitted:", newApplication);
@@ -74,6 +82,9 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
     phone: app.phone_number,
     email: app.email,
     employment: app.employment_status || "",
+    employerName: app.employer || "",
+    employerPhone: "", // These fields aren't in the DB yet
+    employerAddress: "",
     reason: app.loan_purpose,
     duration: app.loan_duration,
     amount: app.loan_amount,
@@ -81,7 +92,10 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
     signatureFullName: app.signature,
     createdAt: new Date(app.created_at),
     status: validateStatus(app.status),
-    paymentStatus: validatePaymentStatus(app.payment_status)
+    paymentStatus: validatePaymentStatus(app.payment_status),
+    referenceName: "",
+    referencePhone: "",
+    referenceAddress: ""
   }));
 };
 
@@ -105,6 +119,9 @@ export const getApplicationById = async (id: string): Promise<LoanApplication | 
     phone: data.phone_number,
     email: data.email,
     employment: data.employment_status || "",
+    employerName: data.employer || "",
+    employerPhone: "", // These fields aren't in the DB yet
+    employerAddress: "",
     reason: data.loan_purpose,
     duration: data.loan_duration,
     amount: data.loan_amount,
@@ -112,7 +129,10 @@ export const getApplicationById = async (id: string): Promise<LoanApplication | 
     signatureFullName: data.signature,
     createdAt: new Date(data.created_at),
     status: validateStatus(data.status),
-    paymentStatus: validatePaymentStatus(data.payment_status)
+    paymentStatus: validatePaymentStatus(data.payment_status),
+    referenceName: "",
+    referencePhone: "",
+    referenceAddress: ""
   };
 };
 
@@ -137,6 +157,9 @@ export const updateApplicationStatus = async (id: string, status: LoanApplicatio
     phone: data.phone_number,
     email: data.email,
     employment: data.employment_status || "",
+    employerName: data.employer || "",
+    employerPhone: "", // These fields aren't in the DB yet
+    employerAddress: "",
     reason: data.loan_purpose,
     duration: data.loan_duration,
     amount: data.loan_amount,
@@ -144,44 +167,58 @@ export const updateApplicationStatus = async (id: string, status: LoanApplicatio
     signatureFullName: data.signature,
     createdAt: new Date(data.created_at),
     status: validateStatus(data.status),
-    paymentStatus: validatePaymentStatus(data.payment_status)
+    paymentStatus: validatePaymentStatus(data.payment_status),
+    referenceName: "",
+    referencePhone: "",
+    referenceAddress: ""
   };
 };
 
 export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplication["paymentStatus"]): Promise<LoanApplication | undefined> => {
   console.log(`Updating payment status for application ${id} to ${paymentStatus}`);
   
-  const { data, error } = await supabase
-    .from('loan_applications')
-    .update({ payment_status: paymentStatus })
-    .eq('id', id)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('loan_applications')
+      .update({ payment_status: paymentStatus })
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (error) {
+      console.error("Error updating payment status:", error);
+      throw error;
+    }
     
-  if (error) {
-    console.error("Error updating payment status:", error);
-    return undefined;
+    console.log("Payment status updated successfully:", data);
+    
+    // Map the Supabase data structure to our frontend model
+    return {
+      id: data.id,
+      fullName: data.full_name,
+      address: data.address,
+      phone: data.phone_number,
+      email: data.email,
+      employment: data.employment_status || "",
+      employerName: data.employer || "",
+      employerPhone: "", // These fields aren't in the DB yet
+      employerAddress: "",
+      reason: data.loan_purpose,
+      duration: data.loan_duration,
+      amount: data.loan_amount,
+      interestRate: data.interest_rate,
+      signatureFullName: data.signature,
+      createdAt: new Date(data.created_at),
+      status: validateStatus(data.status),
+      paymentStatus: validatePaymentStatus(data.payment_status),
+      referenceName: "",
+      referencePhone: "",
+      referenceAddress: ""
+    };
+  } catch (error) {
+    console.error("Payment status update failed with exception:", error);
+    throw error;
   }
-  
-  console.log("Payment status updated successfully:", data);
-  
-  // Map the Supabase data structure to our frontend model
-  return {
-    id: data.id,
-    fullName: data.full_name,
-    address: data.address,
-    phone: data.phone_number,
-    email: data.email,
-    employment: data.employment_status || "",
-    reason: data.loan_purpose,
-    duration: data.loan_duration,
-    amount: data.loan_amount,
-    interestRate: data.interest_rate,
-    signatureFullName: data.signature,
-    createdAt: new Date(data.created_at),
-    status: validateStatus(data.status),
-    paymentStatus: validatePaymentStatus(data.payment_status)
-  };
 };
 
 // Helper functions to validate and cast string values to the required types
@@ -197,22 +234,4 @@ const validatePaymentStatus = (paymentStatus: string): LoanApplication["paymentS
   return validPaymentStatuses.includes(paymentStatus as LoanApplication["paymentStatus"]) 
     ? (paymentStatus as LoanApplication["paymentStatus"]) 
     : "pending";
-};
-
-// Calculate interest rate based on amount and duration
-const calculateInterestRate = (amount: number, duration: number): number => {
-  // Base rate is 3%
-  let rate = 3;
-  
-  // Higher amounts get higher rates
-  if (amount > 250000) rate += 2;
-  else if (amount > 100000) rate += 1;
-  
-  // Longer durations get higher rates
-  if (duration > 24) rate += 3;
-  else if (duration > 12) rate += 2;
-  else if (duration > 6) rate += 1;
-  
-  // Cap at 10%
-  return Math.min(rate, 10);
 };

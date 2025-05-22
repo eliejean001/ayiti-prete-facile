@@ -5,6 +5,9 @@ export interface LoanApplication {
   address: string;
   phone: string;
   employment: string;
+  employerName: string;
+  employerPhone: string;
+  employerAddress: string;
   reason: string;
   duration: number;
   amount: number;
@@ -14,6 +17,9 @@ export interface LoanApplication {
   createdAt: Date;
   status: "pending" | "approved" | "rejected" | "reviewing";
   paymentStatus: "pending" | "paid";
+  referenceName: string;
+  referencePhone: string;
+  referenceAddress: string;
 }
 
 export interface AdminUser {
