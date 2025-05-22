@@ -66,28 +66,31 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
     throw error;
   }
   
+  // Use explicit type assertion to handle the response
+  const dbResponse = data as unknown as LoanApplicationDbResponse;
+  
   // Map the Supabase data structure to our frontend model
   const newApplication: LoanApplication = {
-    id: data.id,
-    fullName: data.full_name,
-    address: data.address,
-    phone: data.phone_number,
-    email: data.email,
-    employment: data.employment_status || "",
-    employerName: data.employer || "",
-    employerPhone: data.employer_phone || "",
-    employerAddress: data.employer_address || "",
-    reason: data.loan_purpose,
-    duration: data.loan_duration,
-    amount: data.loan_amount,
-    interestRate: data.interest_rate,
-    signatureFullName: data.signature,
-    createdAt: new Date(data.created_at),
-    status: validateStatus(data.status),
-    paymentStatus: validatePaymentStatus(data.payment_status),
-    referenceName: data.reference_name || "",
-    referencePhone: data.reference_phone || "",
-    referenceAddress: data.reference_address || ""
+    id: dbResponse.id,
+    fullName: dbResponse.full_name,
+    address: dbResponse.address,
+    phone: dbResponse.phone_number,
+    email: dbResponse.email,
+    employment: dbResponse.employment_status || "",
+    employerName: dbResponse.employer || "",
+    employerPhone: dbResponse.employer_phone || "",
+    employerAddress: dbResponse.employer_address || "",
+    reason: dbResponse.loan_purpose,
+    duration: dbResponse.loan_duration,
+    amount: dbResponse.loan_amount,
+    interestRate: dbResponse.interest_rate,
+    signatureFullName: dbResponse.signature,
+    createdAt: new Date(dbResponse.created_at),
+    status: validateStatus(dbResponse.status),
+    paymentStatus: validatePaymentStatus(dbResponse.payment_status),
+    referenceName: dbResponse.reference_name || "",
+    referencePhone: dbResponse.reference_phone || "",
+    referenceAddress: dbResponse.reference_address || ""
   };
   
   console.log("New application submitted:", newApplication);
@@ -109,7 +112,7 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
   console.log("Fetched applications:", data);
   
   // Map the Supabase data structure to our frontend model
-  return data.map((app: LoanApplicationDbResponse) => ({
+  return (data as unknown as LoanApplicationDbResponse[]).map((app: LoanApplicationDbResponse) => ({
     id: app.id,
     fullName: app.full_name,
     address: app.address,
@@ -146,7 +149,7 @@ export const getApplicationById = async (id: string): Promise<LoanApplication | 
   }
   
   // Cast data to our known response type to handle the new fields
-  const app = data as LoanApplicationDbResponse;
+  const app = data as unknown as LoanApplicationDbResponse;
   
   // Map the Supabase data structure to our frontend model
   return {
@@ -187,7 +190,7 @@ export const updateApplicationStatus = async (id: string, status: LoanApplicatio
   }
   
   // Cast data to our known response type to handle the new fields
-  const app = data as LoanApplicationDbResponse;
+  const app = data as unknown as LoanApplicationDbResponse;
   
   // Map the Supabase data structure to our frontend model
   return {
@@ -255,7 +258,7 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
     console.log("Payment status updated successfully:", data);
     
     // Cast data to our known response type to handle the new fields
-    const app = data as LoanApplicationDbResponse;
+    const app = data as unknown as LoanApplicationDbResponse;
     
     // Map the Supabase data structure to our frontend model
     return {

@@ -36,6 +36,8 @@ export type Database = {
           created_at: string
           email: string
           employer: string | null
+          employer_address: string | null
+          employer_phone: string | null
           employment_status: string | null
           full_name: string
           id: string
@@ -48,6 +50,9 @@ export type Database = {
           other_income_sources: string | null
           payment_status: string
           phone_number: string
+          reference_address: string | null
+          reference_name: string | null
+          reference_phone: string | null
           signature: string
           status: string
           updated_at: string
@@ -58,6 +63,8 @@ export type Database = {
           created_at?: string
           email: string
           employer?: string | null
+          employer_address?: string | null
+          employer_phone?: string | null
           employment_status?: string | null
           full_name: string
           id?: string
@@ -70,6 +77,9 @@ export type Database = {
           other_income_sources?: string | null
           payment_status?: string
           phone_number: string
+          reference_address?: string | null
+          reference_name?: string | null
+          reference_phone?: string | null
           signature: string
           status?: string
           updated_at?: string
@@ -80,6 +90,8 @@ export type Database = {
           created_at?: string
           email?: string
           employer?: string | null
+          employer_address?: string | null
+          employer_phone?: string | null
           employment_status?: string | null
           full_name?: string
           id?: string
@@ -92,6 +104,9 @@ export type Database = {
           other_income_sources?: string | null
           payment_status?: string
           phone_number?: string
+          reference_address?: string | null
+          reference_name?: string | null
+          reference_phone?: string | null
           signature?: string
           status?: string
           updated_at?: string
