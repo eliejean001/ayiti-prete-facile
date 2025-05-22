@@ -1,3 +1,4 @@
+
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
