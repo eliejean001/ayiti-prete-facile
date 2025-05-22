@@ -28,6 +28,7 @@ interface LoanApplicationDbResponse {
   other_income_sources: string | null;
   monthly_income: number | null;
   years_employed: number | null;
+  updated_at: string;
 }
 
 // This will now submit applications with pending payment status by default
