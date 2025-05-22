@@ -1,24 +1,36 @@
 
-import { AdminUser } from "@/types/loan";
+import bcrypt from 'bcryptjs';
 import { supabase } from "@/integrations/supabase/client";
 
-// This is the hard-coded admin user for development
-const adminUser: AdminUser = {
-  username: "admin",
-  password: "A9y!t1L0@n#2025"
+// Check if user is authenticated via session storage
+export const isAuthenticated = (): boolean => {
+  return sessionStorage.getItem('adminAuthenticated') === 'true';
 };
 
+// Authenticate admin against database with secure password hashing
 export const authenticateAdmin = async (username: string, password: string): Promise<boolean> => {
   try {
-    // Hard-coded admin check for development
-    if (username === adminUser.username && password === adminUser.password) {
-      // Store auth token in session storage
+    // Query the admin_users table for the provided username (email)
+    const { data: adminUser, error } = await supabase
+      .from('admin_users')
+      .select('*')
+      .eq('email', username)
+      .single();
+    
+    if (error || !adminUser) {
+      console.error("Authentication error:", error || "Admin user not found");
+      return false;
+    }
+    
+    // Compare password using bcrypt
+    const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
+    
+    if (passwordMatches) {
+      // Store auth token in session storage (will replace with JWT later)
       sessionStorage.setItem('adminAuthenticated', 'true');
       return true;
     }
     
-    // Alternatively, we could check against database admin users
-    // For future implementation with database admin users
     return false;
   } catch (error) {
     console.error("Authentication error:", error);
@@ -26,11 +38,7 @@ export const authenticateAdmin = async (username: string, password: string): Pro
   }
 };
 
-export const isAuthenticated = (): boolean => {
-  // Check if admin is authenticated via session storage
-  return sessionStorage.getItem('adminAuthenticated') === 'true';
-};
-
+// Logout function - clears authentication state
 export const logoutAdmin = (): void => {
   // Clear admin auth from session storage
   sessionStorage.removeItem('adminAuthenticated');
