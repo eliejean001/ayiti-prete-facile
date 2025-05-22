@@ -80,6 +80,8 @@ const Payment = () => {
       // Fallback for development/testing: proceed without payment
       setTimeout(() => {
         // If we're in development mode or MonCash is unavailable, submit the form directly
+        // Get the form data again since we're in a different scope
+        const formData = location.state?.formData;
         if (formData) {
           navigate('/confirmation');
         }
