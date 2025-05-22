@@ -4,8 +4,8 @@
 
 // MonCash API configuration
 const MONCASH_CONFIG = {
-  clientId: process.env.MONCASH_CLIENT_ID || "your_client_id", // Replace in production
-  clientSecret: process.env.MONCASH_CLIENT_SECRET || "your_client_secret", // Replace in production
+  clientId: import.meta.env.VITE_MONCASH_CLIENT_ID || "your_client_id", // Replace in production
+  clientSecret: import.meta.env.VITE_MONCASH_CLIENT_SECRET || "your_client_secret", // Replace in production
   baseUrl: "https://sandbox.moncashbutton.digicelgroup.com/Api", // Sandbox URL, change to production when ready
   redirectUrl: window.location.origin + "/payment-callback", // Redirect URL after payment
   version: "v1"
