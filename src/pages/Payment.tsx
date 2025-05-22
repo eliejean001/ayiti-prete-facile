@@ -1,10 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { generatePaymentUrl } from '@/services/moncashService';
+import { createPayment, getPaymentUrl, generateOrderId } from '@/services/moncashService';
 
 const Payment = () => {
   const location = useLocation();
@@ -40,7 +39,7 @@ const Payment = () => {
       navigate('/payment-callback?transactionId=demo12345');
       
       /* In production, use this:
-      const paymentUrl = await generatePaymentUrl(1000); // 1000 HTG fee
+      const paymentUrl = await getPaymentUrl(1000); // 1000 HTG fee
       if (paymentUrl) {
         window.location.href = paymentUrl;
       } else {
