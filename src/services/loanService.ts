@@ -1,5 +1,32 @@
+
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
+
+// Define an interface for the database response to include all fields we're using
+interface LoanApplicationDbResponse {
+  id: string;
+  full_name: string;
+  address: string;
+  phone_number: string;
+  email: string;
+  employment_status: string | null;
+  employer: string | null;
+  employer_phone: string | null;
+  employer_address: string | null;
+  reference_name: string | null;
+  reference_phone: string | null;
+  reference_address: string | null;
+  job_title: string | null;
+  loan_purpose: string;
+  loan_duration: number;
+  loan_amount: number;
+  interest_rate: number;
+  signature: string;
+  created_at: string;
+  status: string;
+  payment_status: string;
+  other_income_sources: string | null;
+}
 
 // This will now submit applications with pending payment status by default
 export const submitLoanApplication = async (application: Omit<LoanApplication, "id" | "createdAt" | "status" | "paymentStatus">) => {
@@ -79,7 +106,7 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
   console.log("Fetched applications:", data);
   
   // Map the Supabase data structure to our frontend model
-  return data.map(app => ({
+  return data.map((app: LoanApplicationDbResponse) => ({
     id: app.id,
     fullName: app.full_name,
     address: app.address,
@@ -87,8 +114,8 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
     email: app.email,
     employment: app.employment_status || "",
     employerName: app.employer || "",
-    employerPhone: "", // These fields aren't in the DB yet
-    employerAddress: "",
+    employerPhone: app.employer_phone || "",
+    employerAddress: app.employer_address || "",
     reason: app.loan_purpose,
     duration: app.loan_duration,
     amount: app.loan_amount,
@@ -97,9 +124,9 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
     createdAt: new Date(app.created_at),
     status: validateStatus(app.status),
     paymentStatus: validatePaymentStatus(app.payment_status),
-    referenceName: "",
-    referencePhone: "",
-    referenceAddress: ""
+    referenceName: app.reference_name || "",
+    referencePhone: app.reference_phone || "",
+    referenceAddress: app.reference_address || ""
   }));
 };
 
@@ -115,28 +142,31 @@ export const getApplicationById = async (id: string): Promise<LoanApplication | 
     return undefined;
   }
   
+  // Cast data to our known response type to handle the new fields
+  const app = data as LoanApplicationDbResponse;
+  
   // Map the Supabase data structure to our frontend model
   return {
-    id: data.id,
-    fullName: data.full_name,
-    address: data.address,
-    phone: data.phone_number,
-    email: data.email,
-    employment: data.employment_status || "",
-    employerName: data.employer || "",
-    employerPhone: "", // These fields aren't in the DB yet
-    employerAddress: "",
-    reason: data.loan_purpose,
-    duration: data.loan_duration,
-    amount: data.loan_amount,
-    interestRate: data.interest_rate,
-    signatureFullName: data.signature,
-    createdAt: new Date(data.created_at),
-    status: validateStatus(data.status),
-    paymentStatus: validatePaymentStatus(data.payment_status),
-    referenceName: "",
-    referencePhone: "",
-    referenceAddress: ""
+    id: app.id,
+    fullName: app.full_name,
+    address: app.address,
+    phone: app.phone_number,
+    email: app.email,
+    employment: app.employment_status || "",
+    employerName: app.employer || "",
+    employerPhone: app.employer_phone || "",
+    employerAddress: app.employer_address || "",
+    reason: app.loan_purpose,
+    duration: app.loan_duration,
+    amount: app.loan_amount,
+    interestRate: app.interest_rate,
+    signatureFullName: app.signature,
+    createdAt: new Date(app.created_at),
+    status: validateStatus(app.status),
+    paymentStatus: validatePaymentStatus(app.payment_status),
+    referenceName: app.reference_name || "",
+    referencePhone: app.reference_phone || "",
+    referenceAddress: app.reference_address || ""
   };
 };
 
@@ -153,28 +183,31 @@ export const updateApplicationStatus = async (id: string, status: LoanApplicatio
     return undefined;
   }
   
+  // Cast data to our known response type to handle the new fields
+  const app = data as LoanApplicationDbResponse;
+  
   // Map the Supabase data structure to our frontend model
   return {
-    id: data.id,
-    fullName: data.full_name,
-    address: data.address,
-    phone: data.phone_number,
-    email: data.email,
-    employment: data.employment_status || "",
-    employerName: data.employer || "",
-    employerPhone: "", // These fields aren't in the DB yet
-    employerAddress: "",
-    reason: data.loan_purpose,
-    duration: data.loan_duration,
-    amount: data.loan_amount,
-    interestRate: data.interest_rate,
-    signatureFullName: data.signature,
-    createdAt: new Date(data.created_at),
-    status: validateStatus(data.status),
-    paymentStatus: validatePaymentStatus(data.payment_status),
-    referenceName: "",
-    referencePhone: "",
-    referenceAddress: ""
+    id: app.id,
+    fullName: app.full_name,
+    address: app.address,
+    phone: app.phone_number,
+    email: app.email,
+    employment: app.employment_status || "",
+    employerName: app.employer || "",
+    employerPhone: app.employer_phone || "",
+    employerAddress: app.employer_address || "",
+    reason: app.loan_purpose,
+    duration: app.loan_duration,
+    amount: app.loan_amount,
+    interestRate: app.interest_rate,
+    signatureFullName: app.signature,
+    createdAt: new Date(app.created_at),
+    status: validateStatus(app.status),
+    paymentStatus: validatePaymentStatus(app.payment_status),
+    referenceName: app.reference_name || "",
+    referencePhone: app.reference_phone || "",
+    referenceAddress: app.reference_address || ""
   };
 };
 
@@ -218,28 +251,31 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
     
     console.log("Payment status updated successfully:", data);
     
+    // Cast data to our known response type to handle the new fields
+    const app = data as LoanApplicationDbResponse;
+    
     // Map the Supabase data structure to our frontend model
     return {
-      id: data.id,
-      fullName: data.full_name,
-      address: data.address,
-      phone: data.phone_number,
-      email: data.email,
-      employment: data.employment_status || "",
-      employerName: data.employer || "",
-      employerPhone: data.employer_phone || "",
-      employerAddress: data.employer_address || "",
-      reason: data.loan_purpose,
-      duration: data.loan_duration,
-      amount: data.loan_amount,
-      interestRate: data.interest_rate,
-      signatureFullName: data.signature,
-      createdAt: new Date(data.created_at),
-      status: validateStatus(data.status),
-      paymentStatus: validatePaymentStatus(data.payment_status),
-      referenceName: data.reference_name || "",
-      referencePhone: data.reference_phone || "",
-      referenceAddress: data.reference_address || ""
+      id: app.id,
+      fullName: app.full_name,
+      address: app.address,
+      phone: app.phone_number,
+      email: app.email,
+      employment: app.employment_status || "",
+      employerName: app.employer || "",
+      employerPhone: app.employer_phone || "",
+      employerAddress: app.employer_address || "",
+      reason: app.loan_purpose,
+      duration: app.loan_duration,
+      amount: app.loan_amount,
+      interestRate: app.interest_rate,
+      signatureFullName: app.signature,
+      createdAt: new Date(app.created_at),
+      status: validateStatus(app.status),
+      paymentStatus: validatePaymentStatus(app.payment_status),
+      referenceName: app.reference_name || "",
+      referencePhone: app.reference_phone || "",
+      referenceAddress: app.reference_address || ""
     };
   } catch (error) {
     console.error("Payment status update failed with exception:", error);
