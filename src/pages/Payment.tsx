@@ -1,145 +1,134 @@
 
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Loader2 } from 'lucide-react';
-import { createPayment, generateOrderId, getPaymentUrl } from '@/services/moncashService';
+import { generatePaymentUrl } from '@/services/moncashService';
 
 const Payment = () => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const FEE_AMOUNT = 1000; // 1000 HTG fee
-
-  const handlePayment = async () => {
-    try {
-      setIsProcessing(true);
-
-      // Check if we have form data from the previous step
-      const formData = location.state?.formData;
-      if (!formData) {
-        toast({
-          title: "Erreur",
-          description: "Aucune donnée de formulaire trouvée. Veuillez remplir à nouveau le formulaire de demande.",
-          variant: "destructive"
-        });
-        navigate('/demande');
-        return;
-      }
-
-      // Store the loan application data in session storage for retrieval after payment
-      sessionStorage.setItem('pendingLoanApplication', JSON.stringify(formData));
-
-      // Generate a unique order ID
-      const orderId = generateOrderId();
-      
-      // Create payment request to MonCash
-      const paymentRequest = {
-        amount: FEE_AMOUNT,
-        orderId: orderId,
-        reference: `Frais d'analyse - ${formData.fullName}`
-      };
-
-      // Display info toast about upcoming MonCash integration
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Get formData from location state
+  const { formData } = location.state || {};
+  
+  useEffect(() => {
+    // If no form data, redirect back to application form
+    if (!formData) {
       toast({
-        title: "Création du paiement MonCash",
-        description: "Nous préparons votre paiement via MonCash..."
-      });
-
-      // Create payment request
-      const response = await createPayment(paymentRequest);
-      
-      if (response && response.payment_token) {
-        // Get the payment URL to redirect the user
-        const paymentUrl = getPaymentUrl(response.payment_token.token);
-        
-        // Redirect to MonCash payment page
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error("Réponse de paiement invalide");
-      }
-    } catch (error) {
-      console.error("Payment error:", error);
-      setIsProcessing(false);
-      
-      toast({
-        title: "Erreur de Paiement",
-        description: error instanceof Error ? error.message : "Une erreur s'est produite lors de l'initialisation du paiement.",
+        title: "Erreur",
+        description: "Aucune information de demande trouvée. Veuillez remplir le formulaire de demande.",
         variant: "destructive"
       });
-      
-      // Show MonCash temporary unavailable message
-      toast({
-        title: "MonCash temporairement indisponible",
-        description: "Pour le moment, nous allons traiter votre demande sans paiement."
-      });
-
-      // Fallback for development/testing: proceed without payment
-      setTimeout(() => {
-        // If we're in development mode or MonCash is unavailable, submit the form directly
-        // Get the form data again since we're in a different scope
-        const formData = location.state?.formData;
-        if (formData) {
-          navigate('/confirmation');
-        }
-      }, 2000);
+      navigate('/demande');
+    } else {
+      // Store form data in session storage for later retrieval
+      sessionStorage.setItem('pendingLoanApplication', JSON.stringify(formData));
+      console.log("Loan application stored in session:", formData);
     }
+  }, [formData, navigate, toast]);
+  
+  const handlePayment = async () => {
+    setIsLoading(true);
+    
+    try {
+      // For demonstration purposes, we'll go directly to the callback
+      // In production, this should call the actual MonCash API
+      navigate('/payment-callback?transactionId=demo12345');
+      
+      /* In production, use this:
+      const paymentUrl = await generatePaymentUrl(1000); // 1000 HTG fee
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error("Failed to generate payment URL");
+      }
+      */
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        title: "Erreur de Paiement",
+        description: "Impossible de procéder au paiement. Veuillez réessayer.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    }
+  };
+  
+  if (!formData) {
+    return null; // Will redirect in useEffect
+  }
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-HT', { 
+      style: 'currency', 
+      currency: 'HTG',
+      maximumFractionDigits: 0
+    }).format(amount);
   };
 
   return (
-    <div className="container mx-auto py-12 px-4 max-w-md">
-      <Card className="shadow-lg">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Frais d'Analyse</CardTitle>
+    <div className="container mx-auto py-8 px-4 max-w-md">
+      <h1 className="text-3xl font-bold mb-6 text-primary text-center">Paiement des Frais</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Frais d'Analyse de Dossier</CardTitle>
           <CardDescription>
-            Frais pour l'analyse de votre demande de prêt
+            Veuillez payer les frais d'analyse de dossier pour continuer votre demande de prêt.
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <div className="border-y py-4">
-            <div className="flex justify-between items-center">
-              <span>Frais d'analyse de dossier:</span>
-              <span className="font-bold">1 000 HTG</span>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <h3 className="text-lg font-semibold mb-3">Résumé de la Demande</h3>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>Nom:</div>
+              <div className="font-semibold text-right">{formData.fullName}</div>
+              
+              <div>Montant demandé:</div>
+              <div className="font-semibold text-right">{formatCurrency(formData.amount)}</div>
+              
+              <div>Durée:</div>
+              <div className="font-semibold text-right">{formData.duration} mois</div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Ces frais sont non remboursables et couvrent le processus d'analyse de votre demande de prêt.
-            </p>
           </div>
           
-          <div className="space-y-4 text-center">
-            <div className="bg-green-50 border border-green-200 rounded-md p-4">
-              <h3 className="font-semibold text-green-700 mb-2">Payer avec MonCash</h3>
-              <p className="text-sm text-green-600">
-                En cliquant sur "Payer avec MonCash" ci-dessous, vous serez redirigé vers la plateforme de paiement sécurisée MonCash pour compléter votre transaction.
-              </p>
+          <div className="border-t border-b py-4">
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Frais d'analyse de dossier:</span>
+              <span className="font-bold text-xl">{formatCurrency(1000)}</span>
             </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Ces frais sont non remboursables et servent à couvrir l'analyse de votre demande de prêt.
+            </p>
           </div>
         </CardContent>
         
         <CardFooter>
           <Button 
-            className="w-full bg-primary hover:bg-primary/90"
-            onClick={handlePayment}
-            disabled={isProcessing}
+            onClick={handlePayment} 
+            disabled={isLoading} 
+            className="w-full"
           >
-            {isProcessing ? (
+            {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                Traitement en cours...
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></span>
+                Traitement...
               </>
             ) : (
-              <>
-                <DollarSign className="mr-2 h-4 w-4" /> 
-                Payer avec MonCash
-              </>
+              'Payer avec MonCash'
             )}
           </Button>
         </CardFooter>
       </Card>
+      
+      <p className="text-center text-sm text-gray-500 mt-6">
+        Votre paiement sera traité par MonCash, la plateforme de paiement mobile de Digicel Haïti.
+      </p>
     </div>
   );
 };

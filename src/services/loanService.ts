@@ -47,10 +47,12 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
     paymentStatus: validatePaymentStatus(data.payment_status)
   };
   
+  console.log("New application submitted:", newApplication);
   return newApplication;
 };
 
 export const getAllApplications = async (): Promise<LoanApplication[]> => {
+  console.log("Fetching all loan applications...");
   const { data, error } = await supabase
     .from('loan_applications')
     .select('*')
@@ -60,6 +62,8 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
     console.error("Error fetching loan applications:", error);
     throw error;
   }
+  
+  console.log("Fetched applications:", data);
   
   // Map the Supabase data structure to our frontend model
   return data.map(app => ({

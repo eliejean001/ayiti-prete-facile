@@ -1,19 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { authenticateAdmin, isAuthenticated } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { authenticateAdmin, loginAdmin } from '@/services/authService';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
+import { LockKeyhole, User } from 'lucide-react';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -22,76 +16,108 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    // If already authenticated, redirect to dashboard
+    if (isAuthenticated()) {
+      navigate('/admin/dashboard');
+    }
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!username || !password) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir votre nom d'utilisateur et mot de passe.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate network delay
-    setTimeout(() => {
-      const isAuthenticated = authenticateAdmin(username, password);
+    try {
+      const authenticated = await authenticateAdmin(username, password);
       
-      if (isAuthenticated) {
-        loginAdmin();
+      if (authenticated) {
         toast({
-          title: "Connexion Réussie",
-          description: "Bienvenue dans l'interface d'administration"
+          title: "Connexion réussie",
+          description: "Bienvenue dans votre tableau de bord administratif.",
         });
         navigate('/admin/dashboard');
       } else {
         toast({
-          title: "Échec de la Connexion",
-          description: "Nom d'utilisateur ou mot de passe incorrect",
+          title: "Échec de connexion",
+          description: "Nom d'utilisateur ou mot de passe incorrect.",
           variant: "destructive"
         });
       }
-      
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la connexion.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="container mx-auto flex justify-center items-center min-h-[calc(100vh-12rem)]">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Administration AYITILOAN</CardTitle>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center">Administration</CardTitle>
           <CardDescription className="text-center">
-            Connectez-vous pour accéder au tableau de bord administratif
+            Connectez-vous pour accéder au tableau de bord
           </CardDescription>
         </CardHeader>
-        
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Nom d'utilisateur</Label>
+              <Label htmlFor="username" className="flex items-center gap-2">
+                <User className="h-4 w-4" /> Nom d'utilisateur
+              </Label>
               <Input
                 id="username"
+                type="text"
+                placeholder="admin"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
                 required
+                autoComplete="username"
               />
             </div>
-            
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password" className="flex items-center gap-2">
+                <LockKeyhole className="h-4 w-4" /> Mot de passe
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••"
                 required
+                autoComplete="current-password"
               />
             </div>
           </CardContent>
-          
           <CardFooter>
             <Button 
+              className="w-full" 
               type="submit" 
-              className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? "Connexion en cours..." : "Se Connecter"}
+              {isLoading ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></span>
+                  Connexion...
+                </>
+              ) : (
+                'Se Connecter'
+              )}
             </Button>
           </CardFooter>
         </form>
