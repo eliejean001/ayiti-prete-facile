@@ -16,11 +16,14 @@ import { getAllApplications } from '@/services/loanService';
 import { LoanApplication } from '@/types/loan';
 import { Download, LogOut } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import { useToast } from '@/components/ui/use-toast';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -30,13 +33,25 @@ const AdminDashboard = () => {
     }
     
     // Load applications
-    const loadApplications = () => {
-      const allApps = getAllApplications();
-      setApplications(allApps);
+    const loadApplications = async () => {
+      try {
+        setIsLoading(true);
+        const allApps = await getAllApplications();
+        setApplications(allApps);
+      } catch (error) {
+        console.error('Failed to load applications:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les demandes de prêt.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     loadApplications();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleLogout = () => {
     logoutAdmin();
@@ -63,6 +78,11 @@ const AdminDashboard = () => {
     };
     
     html2pdf().set(pdfOptions).from(applicationHTML).save();
+    
+    toast({
+      title: "Téléchargement",
+      description: "Le PDF a été téléchargé avec succès",
+    });
   };
   
   const formatDate = (date: Date) => {
@@ -97,7 +117,11 @@ const AdminDashboard = () => {
             <CardTitle>Demandes de Prêt</CardTitle>
           </CardHeader>
           <CardContent>
-            {applications.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : applications.length === 0 ? (
               <p className="text-center text-gray-500 py-4">
                 Aucune demande de prêt pour le moment.
               </p>
