@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Shield } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Header: React.FC = () => {
@@ -62,22 +62,13 @@ const Header: React.FC = () => {
                         Demander un Prêt
                       </Link>
                     </li>
-                    <li>
-                      <Link 
-                        to="/admin" 
-                        className="flex items-center py-2 hover:text-secondary transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <Shield size={16} className="mr-1" /> Admin
-                      </Link>
-                    </li>
                   </ul>
                 </nav>
               </div>
             )}
           </>
         ) : (
-          <nav className="flex items-center">
+          <nav>
             <ul className="flex space-x-4">
               <li>
                 <Link to="/" className="hover:text-secondary transition-colors">
@@ -95,14 +86,6 @@ const Header: React.FC = () => {
                 </Link>
               </li>
             </ul>
-            <div className="ml-6 flex items-center">
-              <Link 
-                to="/admin" 
-                className="flex items-center text-white bg-primary/80 hover:bg-primary/60 px-3 py-1 rounded-md transition-colors"
-              >
-                <Shield size={16} className="mr-1" /> Admin
-              </Link>
-            </div>
           </nav>
         )}
       </div>
