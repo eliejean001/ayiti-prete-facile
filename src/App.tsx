@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import LoanApplication from "./pages/LoanApplication";
 import Payment from "./pages/Payment";
+import PaymentCallback from "./pages/PaymentCallback";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/" element={<Home />} />
               <Route path="/demande" element={<LoanApplication />} />
               <Route path="/paiement" element={<Payment />} />
+              <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/confirmation" element={<PaymentConfirmation />} />
               <Route path="/admin" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />

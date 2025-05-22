@@ -78,9 +78,8 @@ const LoanApplicationForm = () => {
       return;
     }
     
-    // Proceed to payment page
-    // The actual form submission will happen after successful payment
-    navigate('/paiement');
+    // Navigate to payment page with form data
+    navigate('/paiement', { state: { formData } });
   };
 
   // Calculate monthly payment
