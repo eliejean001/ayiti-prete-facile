@@ -1,4 +1,3 @@
-
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +25,8 @@ interface LoanApplicationDbResponse {
   status: string;
   payment_status: string;
   other_income_sources: string | null;
+  monthly_income: number | null;
+  years_employed: number | null;
 }
 
 // This will now submit applications with pending payment status by default
