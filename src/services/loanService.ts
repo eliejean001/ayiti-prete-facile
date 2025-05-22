@@ -1,4 +1,3 @@
-
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,6 +14,11 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
       email: application.email,
       employment_status: application.employment,
       employer: application.employerName || null,
+      employer_phone: application.employerPhone || null,
+      employer_address: application.employerAddress || null,
+      reference_name: application.referenceName || null,
+      reference_phone: application.referencePhone || null,
+      reference_address: application.referenceAddress || null,
       job_title: application.employment || null,
       loan_purpose: application.reason,
       loan_duration: application.duration,
@@ -41,8 +45,8 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
     email: data.email,
     employment: data.employment_status || "",
     employerName: data.employer || "",
-    employerPhone: "", // These fields aren't in the DB yet
-    employerAddress: "",
+    employerPhone: data.employer_phone || "",
+    employerAddress: data.employer_address || "",
     reason: data.loan_purpose,
     duration: data.loan_duration,
     amount: data.loan_amount,
@@ -51,9 +55,9 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
     createdAt: new Date(data.created_at),
     status: validateStatus(data.status),
     paymentStatus: validatePaymentStatus(data.payment_status),
-    referenceName: "",
-    referencePhone: "",
-    referenceAddress: ""
+    referenceName: data.reference_name || "",
+    referencePhone: data.reference_phone || "",
+    referenceAddress: data.reference_address || ""
   };
   
   console.log("New application submitted:", newApplication);
@@ -178,15 +182,37 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
   console.log(`Updating payment status for application ${id} to ${paymentStatus}`);
   
   try {
+    // First check what the current status is to help with debugging
+    const { data: currentData, error: checkError } = await supabase
+      .from('loan_applications')
+      .select('payment_status')
+      .eq('id', id)
+      .single();
+      
+    if (checkError) {
+      console.error("Error checking current payment status:", checkError);
+      console.error("Error details:", JSON.stringify(checkError, null, 2));
+      throw checkError;
+    }
+    
+    console.log("Current payment status in database:", currentData?.payment_status);
+    
+    // Now update the status
+    // Important: We're mapping 'paid' to 'paid' but handling both 'pending' and 'unpaid' cases
+    const dbPaymentStatus = paymentStatus === 'paid' ? 'paid' : 'pending';
+    
+    console.log(`Sending update to database with payment_status: ${dbPaymentStatus}`);
+    
     const { data, error } = await supabase
       .from('loan_applications')
-      .update({ payment_status: paymentStatus })
+      .update({ payment_status: dbPaymentStatus })
       .eq('id', id)
-      .select()
+      .select('*')
       .single();
       
     if (error) {
       console.error("Error updating payment status:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       throw error;
     }
     
@@ -201,8 +227,8 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
       email: data.email,
       employment: data.employment_status || "",
       employerName: data.employer || "",
-      employerPhone: "", // These fields aren't in the DB yet
-      employerAddress: "",
+      employerPhone: data.employer_phone || "",
+      employerAddress: data.employer_address || "",
       reason: data.loan_purpose,
       duration: data.loan_duration,
       amount: data.loan_amount,
@@ -211,9 +237,9 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
       createdAt: new Date(data.created_at),
       status: validateStatus(data.status),
       paymentStatus: validatePaymentStatus(data.payment_status),
-      referenceName: "",
-      referencePhone: "",
-      referenceAddress: ""
+      referenceName: data.reference_name || "",
+      referencePhone: data.reference_phone || "",
+      referenceAddress: data.reference_address || ""
     };
   } catch (error) {
     console.error("Payment status update failed with exception:", error);
@@ -230,6 +256,12 @@ const validateStatus = (status: string): LoanApplication["status"] => {
 };
 
 const validatePaymentStatus = (paymentStatus: string): LoanApplication["paymentStatus"] => {
+  // Handle both 'unpaid' (from DB) and 'pending' (from our frontend model) as the same state
+  if (paymentStatus === 'unpaid') {
+    console.log("Converting 'unpaid' from DB to 'pending' for frontend");
+    return 'pending';
+  }
+  
   const validPaymentStatuses: LoanApplication["paymentStatus"][] = ["pending", "paid"];
   return validPaymentStatuses.includes(paymentStatus as LoanApplication["paymentStatus"]) 
     ? (paymentStatus as LoanApplication["paymentStatus"]) 
