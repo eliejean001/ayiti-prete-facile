@@ -1,10 +1,11 @@
-
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
-// This will be called after successful payment
+// This will now submit applications with pending payment status by default
 export const submitLoanApplication = async (application: Omit<LoanApplication, "id" | "createdAt" | "status" | "paymentStatus" | "interestRate">) => {
   const interestRate = calculateInterestRate(application.amount, application.duration);
+  
+  console.log("Submitting application with payment status pending:", application);
   
   const { data, error } = await supabase
     .from('loan_applications')
@@ -19,7 +20,7 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
       loan_amount: application.amount,
       interest_rate: interestRate,
       signature: application.signatureFullName,
-      payment_status: 'paid'
+      payment_status: 'pending' // Default to pending for admin verification
     })
     .select()
     .single();
@@ -148,6 +149,8 @@ export const updateApplicationStatus = async (id: string, status: LoanApplicatio
 };
 
 export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplication["paymentStatus"]): Promise<LoanApplication | undefined> => {
+  console.log(`Updating payment status for application ${id} to ${paymentStatus}`);
+  
   const { data, error } = await supabase
     .from('loan_applications')
     .update({ payment_status: paymentStatus })
@@ -159,6 +162,8 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
     console.error("Error updating payment status:", error);
     return undefined;
   }
+  
+  console.log("Payment status updated successfully:", data);
   
   // Map the Supabase data structure to our frontend model
   return {

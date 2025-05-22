@@ -12,9 +12,9 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { isAuthenticated, logoutAdmin } from '@/services/authService';
-import { getAllApplications } from '@/services/loanService';
+import { getAllApplications, updatePaymentStatus, updateApplicationStatus } from '@/services/loanService';
 import { LoanApplication } from '@/types/loan';
-import { Download, LogOut } from 'lucide-react';
+import { Download, LogOut, CheckCircle2 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -24,6 +24,7 @@ const AdminDashboard = () => {
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     // Check if admin is authenticated
@@ -33,25 +34,26 @@ const AdminDashboard = () => {
     }
     
     // Load applications
-    const loadApplications = async () => {
-      try {
-        setIsLoading(true);
-        const allApps = await getAllApplications();
-        setApplications(allApps);
-      } catch (error) {
-        console.error('Failed to load applications:', error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de charger les demandes de prêt.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     loadApplications();
   }, [navigate, toast]);
+  
+  const loadApplications = async () => {
+    try {
+      setIsLoading(true);
+      const allApps = await getAllApplications();
+      console.log("Loaded applications:", allApps);
+      setApplications(allApps);
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les demandes de prêt.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     logoutAdmin();
@@ -60,6 +62,40 @@ const AdminDashboard = () => {
 
   const handleViewApplication = (application: LoanApplication) => {
     setSelectedApplication(application);
+  };
+  
+  const handleMarkAsPaid = async (applicationId: string) => {
+    setIsUpdating(true);
+    try {
+      const updatedApplication = await updatePaymentStatus(applicationId, 'paid');
+      if (updatedApplication) {
+        toast({
+          title: "Paiement Confirmé",
+          description: "Le statut de paiement a été mis à jour avec succès.",
+        });
+        
+        // Update applications in state
+        setApplications(apps => apps.map(app => 
+          app.id === applicationId ? { ...app, paymentStatus: 'paid' } : app
+        ));
+        
+        // If this is the currently selected application, update it
+        if (selectedApplication && selectedApplication.id === applicationId) {
+          setSelectedApplication({ ...selectedApplication, paymentStatus: 'paid' });
+        }
+      } else {
+        throw new Error("Mise à jour échouée");
+      }
+    } catch (error) {
+      console.error("Failed to update payment status:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut de paiement.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const downloadApplicationAsPdf = () => {
@@ -131,6 +167,7 @@ const AdminDashboard = () => {
                   <TableRow>
                     <TableHead>Nom</TableHead>
                     <TableHead>Date</TableHead>
+                    <TableHead>Paiement</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -139,6 +176,15 @@ const AdminDashboard = () => {
                     <TableRow key={app.id}>
                       <TableCell>{app.fullName}</TableCell>
                       <TableCell>{formatDate(app.createdAt)}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          app.paymentStatus === 'paid' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {app.paymentStatus === 'paid' ? 'Payé' : 'En attente'}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         <Button 
                           variant="outline" 
@@ -162,13 +208,35 @@ const AdminDashboard = () => {
             <CardTitle className="flex justify-between items-center">
               <span>Détails de la Demande</span>
               {selectedApplication && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={downloadApplicationAsPdf}
-                >
-                  <Download className="h-4 w-4 mr-2" /> Télécharger PDF
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={downloadApplicationAsPdf}
+                  >
+                    <Download className="h-4 w-4 mr-2" /> Télécharger PDF
+                  </Button>
+                  
+                  {selectedApplication.paymentStatus === 'pending' && (
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      onClick={() => handleMarkAsPaid(selectedApplication.id)}
+                      disabled={isUpdating}
+                    >
+                      {isUpdating ? (
+                        <>
+                          <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-b-transparent"></span>
+                          Traitement...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2" /> Marquer comme payé
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               )}
             </CardTitle>
           </CardHeader>

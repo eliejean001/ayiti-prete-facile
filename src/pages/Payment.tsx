@@ -1,15 +1,15 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { createPayment, getPaymentUrl, generateOrderId } from '@/services/moncashService';
+import { QrCode } from 'lucide-react';
 
 const Payment = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   
   // Get formData from location state
   const { formData } = location.state || {};
@@ -30,31 +30,10 @@ const Payment = () => {
     }
   }, [formData, navigate, toast]);
   
-  const handlePayment = async () => {
-    setIsLoading(true);
-    
-    try {
-      // For demonstration purposes, we'll go directly to the callback
-      // In production, this should call the actual MonCash API
-      navigate('/payment-callback?transactionId=demo12345');
-      
-      /* In production, use this:
-      const paymentUrl = await getPaymentUrl(1000); // 1000 HTG fee
-      if (paymentUrl) {
-        window.location.href = paymentUrl;
-      } else {
-        throw new Error("Failed to generate payment URL");
-      }
-      */
-    } catch (error) {
-      console.error("Payment error:", error);
-      toast({
-        title: "Erreur de Paiement",
-        description: "Impossible de procéder au paiement. Veuillez réessayer.",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-    }
+  const handleContinue = () => {
+    // Since the payment is now manual, just navigate to a confirmation page
+    // explaining that the application is pending review and payment verification
+    navigate('/payment-callback?transactionId=pending');
   };
   
   if (!formData) {
@@ -69,6 +48,9 @@ const Payment = () => {
     }).format(amount);
   };
 
+  // QR Code placeholder URL - In production, this would be a real MonCash QR code URL
+  const qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MONCASH:PAYMENT:AYITILOAN:1000HTG";
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-md">
       <h1 className="text-3xl font-bold mb-6 text-primary text-center">Paiement des Frais</h1>
@@ -77,7 +59,7 @@ const Payment = () => {
         <CardHeader>
           <CardTitle>Frais d'Analyse de Dossier</CardTitle>
           <CardDescription>
-            Veuillez payer les frais d'analyse de dossier pour continuer votre demande de prêt.
+            Veuillez scanner le code QR pour payer les frais d'analyse de dossier.
           </CardDescription>
         </CardHeader>
         
@@ -105,28 +87,36 @@ const Payment = () => {
               Ces frais sont non remboursables et servent à couvrir l'analyse de votre demande de prêt.
             </p>
           </div>
+          
+          <div className="flex flex-col items-center justify-center">
+            <div className="bg-white p-4 border rounded-lg shadow-sm">
+              <img 
+                src={qrCodeUrl}
+                alt="Code QR MonCash"
+                className="w-full h-auto"
+              />
+            </div>
+            <p className="text-center text-sm font-semibold mt-4">Scannez ce code avec votre application MonCash</p>
+            <div className="mt-3 bg-yellow-50 p-3 rounded-md border border-yellow-100 text-sm">
+              <p className="font-medium mb-1">⚠️ Important:</p>
+              <p>Utilisez exactement le même nom lors du paiement: <strong>{formData.fullName}</strong></p>
+            </div>
+          </div>
         </CardContent>
         
         <CardFooter>
           <Button 
-            onClick={handlePayment} 
-            disabled={isLoading} 
+            onClick={handleContinue} 
             className="w-full"
           >
-            {isLoading ? (
-              <>
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></span>
-                Traitement...
-              </>
-            ) : (
-              'Payer avec MonCash'
-            )}
+            <QrCode className="mr-2 h-4 w-4" /> J'ai effectué le paiement
           </Button>
         </CardFooter>
       </Card>
       
       <p className="text-center text-sm text-gray-500 mt-6">
         Votre paiement sera traité par MonCash, la plateforme de paiement mobile de Digicel Haïti.
+        Un administrateur vérifiera votre paiement avant d'approuver votre demande.
       </p>
     </div>
   );
