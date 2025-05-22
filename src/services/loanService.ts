@@ -43,8 +43,8 @@ export const submitLoanApplication = async (application: Omit<LoanApplication, "
     interestRate: data.interest_rate,
     signatureFullName: data.signature,
     createdAt: new Date(data.created_at),
-    status: data.status,
-    paymentStatus: data.payment_status
+    status: validateStatus(data.status),
+    paymentStatus: validatePaymentStatus(data.payment_status)
   };
   
   return newApplication;
@@ -75,8 +75,8 @@ export const getAllApplications = async (): Promise<LoanApplication[]> => {
     interestRate: app.interest_rate,
     signatureFullName: app.signature,
     createdAt: new Date(app.created_at),
-    status: app.status,
-    paymentStatus: app.payment_status
+    status: validateStatus(app.status),
+    paymentStatus: validatePaymentStatus(app.payment_status)
   }));
 };
 
@@ -106,8 +106,8 @@ export const getApplicationById = async (id: string): Promise<LoanApplication | 
     interestRate: data.interest_rate,
     signatureFullName: data.signature,
     createdAt: new Date(data.created_at),
-    status: data.status,
-    paymentStatus: data.payment_status
+    status: validateStatus(data.status),
+    paymentStatus: validatePaymentStatus(data.payment_status)
   };
 };
 
@@ -138,8 +138,8 @@ export const updateApplicationStatus = async (id: string, status: LoanApplicatio
     interestRate: data.interest_rate,
     signatureFullName: data.signature,
     createdAt: new Date(data.created_at),
-    status: data.status,
-    paymentStatus: data.payment_status
+    status: validateStatus(data.status),
+    paymentStatus: validatePaymentStatus(data.payment_status)
   };
 };
 
@@ -170,9 +170,24 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
     interestRate: data.interest_rate,
     signatureFullName: data.signature,
     createdAt: new Date(data.created_at),
-    status: data.status,
-    paymentStatus: data.payment_status
+    status: validateStatus(data.status),
+    paymentStatus: validatePaymentStatus(data.payment_status)
   };
+};
+
+// Helper functions to validate and cast string values to the required types
+const validateStatus = (status: string): LoanApplication["status"] => {
+  const validStatuses: LoanApplication["status"][] = ["pending", "approved", "rejected", "reviewing"];
+  return validStatuses.includes(status as LoanApplication["status"]) 
+    ? (status as LoanApplication["status"]) 
+    : "pending";
+};
+
+const validatePaymentStatus = (paymentStatus: string): LoanApplication["paymentStatus"] => {
+  const validPaymentStatuses: LoanApplication["paymentStatus"][] = ["pending", "paid"];
+  return validPaymentStatuses.includes(paymentStatus as LoanApplication["paymentStatus"]) 
+    ? (paymentStatus as LoanApplication["paymentStatus"]) 
+    : "pending";
 };
 
 // Calculate interest rate based on amount and duration
