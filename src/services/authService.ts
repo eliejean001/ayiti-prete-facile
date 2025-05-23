@@ -17,11 +17,10 @@ export const authenticateAdmin = async (email: string, password: string): Promis
       .maybeSingle();
 
     if (error || !data) {
-      console.error("Authentication error:", error || "Admin user not found");
+      console.error("❌ Authentication error:", error || "Admin user not found");
       return false;
     }
 
-    // Define types to avoid TS issues
     const adminUser = data as {
       id: string;
       email: string;
@@ -29,26 +28,33 @@ export const authenticateAdmin = async (email: string, password: string): Promis
       role: string;
     };
 
-    // Compare passwords
+    // Debug logs
+    console.log("✅ Entered email:", email);
+    console.log("✅ Entered password:", password);
+    console.log("🔐 Hash from DB:", adminUser.password_hash);
+
+    // Compare password with bcrypt hash
     const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
+
     if (!passwordMatches) {
-      console.warn("Password does not match");
+      console.warn("❌ Password does not match bcrypt hash");
       return false;
     }
 
-    // Confirm user has 'admin' role
+    // Confirm admin role
     if (adminUser.role !== 'admin') {
-      console.warn("Access denied: not an admin");
+      console.warn("❌ User does not have 'admin' role");
       return false;
     }
 
     // Save session
     sessionStorage.setItem('adminAuthenticated', 'true');
     sessionStorage.setItem('adminEmail', email);
+    console.log("✅ Authentication successful");
     return true;
 
   } catch (error) {
-    console.error("Authentication error:", error);
+    console.error("❌ Unexpected error during login:", error);
     return false;
   }
 };
