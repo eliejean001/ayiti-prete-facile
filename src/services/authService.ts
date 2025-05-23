@@ -7,39 +7,44 @@ export const isAuthenticated = (): boolean => {
 };
 
 // Authenticate admin against database with secure password and role check
-export const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
+export const authenticateAdmin = async (username: string, password: string): Promise<boolean> => {
   try {
-    // Get admin user by email (trim + lowercase for safety)
-    const { data: adminUser, error } = await supabase
+    // Explicitly select needed fields
+    const { data, error } = await supabase
       .from('admin_users')
       .select('id, email, password_hash, role')
-      .eq('email', email.trim().toLowerCase())
+      .eq('email', username)
       .maybeSingle();
 
-    if (error || !adminUser) {
+    if (error || !data) {
       console.error("Authentication error:", error || "Admin user not found");
       return false;
     }
 
-    // Debug log (optional - remove in production)
-    console.log("Checking password for:", adminUser.email);
+    // Force types so TS doesn't complain
+    const adminUser = data as {
+      id: string;
+      email: string;
+      password_hash: string;
+      role: string;
+    };
 
-    // Check password using bcrypt
+    // Check password against bcrypt-hashed value
     const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
     if (!passwordMatches) {
-      console.warn("Incorrect password for:", adminUser.email);
+      console.warn("Password does not match");
       return false;
     }
 
-    // Check if user has admin role
+    // Ensure the role is admin
     if (adminUser.role !== 'admin') {
       console.warn("Access denied: not an admin");
       return false;
     }
 
-    // Store session
+    // Set session
     sessionStorage.setItem('adminAuthenticated', 'true');
-    sessionStorage.setItem('adminEmail', email.trim().toLowerCase());
+    sessionStorage.setItem('adminEmail', username);
     return true;
 
   } catch (error) {
