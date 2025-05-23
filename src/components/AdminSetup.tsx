@@ -23,8 +23,8 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
     
     if (!email || !password || !confirmPassword) {
       toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs requis.",
+        title: "Error",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
       return;
@@ -32,8 +32,8 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
     
     if (password !== confirmPassword) {
       toast({
-        title: "Erreur",
-        description: "Les mots de passe ne correspondent pas.",
+        title: "Error",
+        description: "Passwords do not match.",
         variant: "destructive"
       });
       return;
@@ -41,8 +41,8 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
     
     if (password.length < 12) {
       toast({
-        title: "Erreur",
-        description: "Le mot de passe doit comporter au moins 12 caractères.",
+        title: "Error",
+        description: "Password must be at least 12 characters long.",
         variant: "destructive"
       });
       return;
@@ -53,15 +53,15 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
     try {
       await setupInitialAdmin(email, password);
       toast({
-        title: "Succès",
-        description: "Compte administrateur créé avec succès.",
+        title: "Success",
+        description: "Admin account created successfully.",
       });
       onSetupComplete();
     } catch (error) {
       console.error("Setup error:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de créer le compte administrateur.",
+        title: "Error",
+        description: "Unable to create admin account.",
         variant: "destructive"
       });
     } finally {
@@ -73,15 +73,15 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
     <div className="container mx-auto flex justify-center items-center min-h-[calc(100vh-12rem)]">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Configuration initiale</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Initial Setup</CardTitle>
           <CardDescription className="text-center">
-            Créez votre premier compte administrateur
+            Create your first admin account
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSetup}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email d'administrateur</Label>
+              <Label htmlFor="email">Admin Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -91,7 +91,7 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -101,7 +101,7 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -120,10 +120,10 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
               {isLoading ? (
                 <>
                   <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></span>
-                  Configuration...
+                  Setting up...
                 </>
               ) : (
-                'Créer le compte administrateur'
+                'Create Admin Account'
               )}
             </Button>
           </CardFooter>

@@ -58,8 +58,8 @@ const AdminLogin = () => {
     
     if (!username || !password) {
       toast({
-        title: "Erreur",
-        description: "Veuillez saisir votre nom d'utilisateur et mot de passe.",
+        title: "Error",
+        description: "Please enter your username and password.",
         variant: "destructive"
       });
       return;
@@ -72,22 +72,22 @@ const AdminLogin = () => {
       
       if (authenticated) {
         toast({
-          title: "Connexion réussie",
-          description: "Bienvenue dans votre tableau de bord administratif.",
+          title: "Login Successful",
+          description: "Welcome to your admin dashboard.",
         });
         navigate('/admin/dashboard');
       } else {
         toast({
-          title: "Échec de connexion",
-          description: "Nom d'utilisateur ou mot de passe incorrect.",
+          title: "Login Failed",
+          description: "Incorrect username or password.",
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error("Login error:", error);
       toast({
-        title: "Erreur",
-        description: "Une erreur s'est produite lors de la connexion.",
+        title: "Error",
+        description: "An error occurred during login.",
         variant: "destructive"
       });
     } finally {
@@ -98,8 +98,8 @@ const AdminLogin = () => {
   const handleSetupComplete = () => {
     setNeedsSetup(false);
     toast({
-      title: "Configuration terminée",
-      description: "Vous pouvez maintenant vous connecter avec vos identifiants d'administrateur.",
+      title: "Setup Complete",
+      description: "You can now log in with your admin credentials.",
     });
   };
 
@@ -108,7 +108,7 @@ const AdminLogin = () => {
       <div className="container mx-auto flex justify-center items-center min-h-[calc(100vh-12rem)]">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-b-transparent"></div>
-          <p className="mt-4">Vérification de la configuration...</p>
+          <p className="mt-4">Checking configuration...</p>
         </div>
       </div>
     );
@@ -122,9 +122,9 @@ const AdminLogin = () => {
     <div className="container mx-auto flex justify-center items-center min-h-[calc(100vh-12rem)]">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Administration</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
           <CardDescription className="text-center">
-            Connectez-vous pour accéder au tableau de bord
+            Sign in to access the admin dashboard
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
@@ -145,7 +145,7 @@ const AdminLogin = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="flex items-center gap-2">
-                <LockKeyhole className="h-4 w-4" /> Mot de passe
+                <LockKeyhole className="h-4 w-4" /> Password
               </Label>
               <Input
                 id="password"
@@ -166,10 +166,10 @@ const AdminLogin = () => {
               {isLoading ? (
                 <>
                   <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></span>
-                  Connexion...
+                  Signing in...
                 </>
               ) : (
-                'Se Connecter'
+                'Sign In'
               )}
             </Button>
           </CardFooter>
