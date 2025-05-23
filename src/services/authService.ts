@@ -6,14 +6,14 @@ export const isAuthenticated = (): boolean => {
   return sessionStorage.getItem('adminAuthenticated') === 'true';
 };
 
-// Authenticate admin against database with secure password and role check
-export const authenticateAdmin = async (username: string, password: string): Promise<boolean> => {
+// Authenticate admin with email and password
+export const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
   try {
-    // Explicitly select needed fields
+    // Get admin user by email and select required fields
     const { data, error } = await supabase
       .from('admin_users')
       .select('id, email, password_hash, role')
-      .eq('email', username)
+      .eq('email', email)
       .maybeSingle();
 
     if (error || !data) {
@@ -21,7 +21,7 @@ export const authenticateAdmin = async (username: string, password: string): Pro
       return false;
     }
 
-    // Force types so TS doesn't complain
+    // Define types to avoid TS issues
     const adminUser = data as {
       id: string;
       email: string;
@@ -29,22 +29,22 @@ export const authenticateAdmin = async (username: string, password: string): Pro
       role: string;
     };
 
-    // Check password against bcrypt-hashed value
+    // Compare passwords
     const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
     if (!passwordMatches) {
       console.warn("Password does not match");
       return false;
     }
 
-    // Ensure the role is admin
+    // Confirm user has 'admin' role
     if (adminUser.role !== 'admin') {
       console.warn("Access denied: not an admin");
       return false;
     }
 
-    // Set session
+    // Save session
     sessionStorage.setItem('adminAuthenticated', 'true');
-    sessionStorage.setItem('adminEmail', username);
+    sessionStorage.setItem('adminEmail', email);
     return true;
 
   } catch (error) {
@@ -53,7 +53,7 @@ export const authenticateAdmin = async (username: string, password: string): Pro
   }
 };
 
-// Logout function - clears authentication state
+// Clear login state
 export const logoutAdmin = (): void => {
   sessionStorage.removeItem('adminAuthenticated');
   sessionStorage.removeItem('adminEmail');
