@@ -1,6 +1,7 @@
 
 import bcrypt from 'bcryptjs';
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 // Check if user is authenticated via session storage
 export const isAuthenticated = (): boolean => {
@@ -15,7 +16,7 @@ export const authenticateAdmin = async (username: string, password: string): Pro
       .from('admin_users')
       .select('*')
       .eq('email', username)
-      .single();
+      .maybeSingle();
     
     if (error || !adminUser) {
       console.error("Authentication error:", error || "Admin user not found");
@@ -28,6 +29,7 @@ export const authenticateAdmin = async (username: string, password: string): Pro
     if (passwordMatches) {
       // Store auth token in session storage (will replace with JWT later)
       sessionStorage.setItem('adminAuthenticated', 'true');
+      sessionStorage.setItem('adminEmail', username);
       return true;
     }
     
@@ -42,4 +44,5 @@ export const authenticateAdmin = async (username: string, password: string): Pro
 export const logoutAdmin = (): void => {
   // Clear admin auth from session storage
   sessionStorage.removeItem('adminAuthenticated');
+  sessionStorage.removeItem('adminEmail');
 };

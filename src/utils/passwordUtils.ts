@@ -7,6 +7,11 @@ export const hashPassword = async (password: string): Promise<string> => {
   return bcrypt.hash(password, saltRounds);
 };
 
+// Compare a password with a hash to verify if they match
+export const comparePassword = async (password: string, hash: string): Promise<boolean> => {
+  return bcrypt.compare(password, hash);
+};
+
 // Utility function to set up initial admin user
 export const setupInitialAdmin = async (email: string, password: string) => {
   const { supabase } = await import('@/integrations/supabase/client');
@@ -19,7 +24,7 @@ export const setupInitialAdmin = async (email: string, password: string) => {
     .from('admin_users')
     .select('id')
     .eq('email', email)
-    .single();
+    .maybeSingle();
   
   if (existingAdmin) {
     // Admin already exists, update password if needed
