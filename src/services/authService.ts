@@ -9,10 +9,10 @@ export const isAuthenticated = (): boolean => {
 // Authenticate admin against database with secure password and role check
 export const authenticateAdmin = async (username: string, password: string): Promise<boolean> => {
   try {
-    // Get admin user from Supabase
+    // Get admin user from Supabase with expected fields
     const { data: adminUser, error } = await supabase
       .from('admin_users')
-      .select('*')
+      .select('id, email, password_hash, role') // Explicitly select role to avoid TS error
       .eq('email', username)
       .maybeSingle();
 
