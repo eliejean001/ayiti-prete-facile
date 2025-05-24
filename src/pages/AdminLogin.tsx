@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { LockKeyhole, User } from 'lucide-react';
-import { setupDefaultAdmins, testAdminLogin } from '@/utils/adminSetup';
+import { testKnownPasswords } from '@/utils/passwordUtils';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -23,7 +23,6 @@ const AdminLogin = () => {
   const [email, setEmail] = useState('fastloan633@gmail.com'); // Pre-fill with test account
   const [password, setPassword] = useState('AdminPassword2025!'); // Pre-fill with test password
   const [isLoading, setIsLoading] = useState(false);
-  const [testCredentials, setTestCredentials] = useState<string>('');
 
   useEffect(() => {
     // Redirect if already authenticated
@@ -32,30 +31,18 @@ const AdminLogin = () => {
       return;
     }
 
-    // Setup default admins on component mount
-    const initializeAdmins = async () => {
+    // Test known passwords on component mount for debugging
+    const runPasswordTests = async () => {
       try {
-        console.log('🚀 Initializing default admin accounts...');
-        const successfulAdmins = await setupDefaultAdmins();
-        
-        if (successfulAdmins.length > 0) {
-          const credentialsText = successfulAdmins
-            .map(admin => `${admin.email} / ${admin.password}`)
-            .join(' or ');
-          setTestCredentials(credentialsText);
-          
-          toast({
-            title: "Test Credentials Available",
-            description: `You can use: ${successfulAdmins[0].email}`,
-          });
-        }
+        console.log('🚀 Running password tests on login page load...');
+        await testKnownPasswords();
       } catch (error) {
-        console.error('❌ Failed to initialize admins:', error);
+        console.error('❌ Failed to run password tests:', error);
       }
     };
 
-    initializeAdmins();
-  }, [navigate, toast]);
+    runPasswordTests();
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,13 +58,9 @@ const AdminLogin = () => {
 
     setIsLoading(true);
     console.log('🔐 Attempting login for:', email);
+    console.log('🔑 Password being used:', password);
 
     try {
-      // First test the credentials
-      const testResult = await testAdminLogin(email, password);
-      console.log('🧪 Pre-login test result:', testResult);
-
-      // Proceed with actual authentication
       const authenticated = await authenticateAdmin(email, password);
 
       if (authenticated) {
@@ -89,7 +72,7 @@ const AdminLogin = () => {
       } else {
         toast({
           title: 'Login Failed',
-          description: 'Invalid email or password.',
+          description: 'Invalid email or password. Please check your credentials.',
           variant: 'destructive',
         });
       }
@@ -113,11 +96,10 @@ const AdminLogin = () => {
           <CardDescription className="text-center">
             Enter your credentials to access the admin dashboard
           </CardDescription>
-          {testCredentials && (
-            <div className="text-xs text-center p-2 bg-blue-50 rounded">
-              Test credentials: {testCredentials}
-            </div>
-          )}
+          <div className="text-xs text-center p-2 bg-blue-50 rounded">
+            Test credentials: fastloan633@gmail.com / AdminPassword2025! <br />
+            Alternative: admin@ayitiloan.com / StrongSecurePassword2025!
+          </div>
         </CardHeader>
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">

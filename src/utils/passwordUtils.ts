@@ -13,6 +13,29 @@ export const comparePassword = async (password: string, hash: string): Promise<b
   return bcrypt.compare(password, hash);
 };
 
+// Test function to verify our known passwords work with the database hashes
+export const testKnownPasswords = async () => {
+  const testCases = [
+    {
+      email: 'fastloan633@gmail.com',
+      password: 'AdminPassword2025!',
+      expectedHash: '$2a$12$ZQWsuLO16i88SWlUTBSyOe7L8Ec8XKmNI8TJ1kPW8/6Vn6X8VJf8u'
+    },
+    {
+      email: 'admin@ayitiloan.com', 
+      password: 'StrongSecurePassword2025!',
+      expectedHash: '$2a$12$8vn0YLQ/fUHJhD4pHZ4YwOXGVLkNFCwIxD6qB5dMqZ8B4pT6oD5R.'
+    }
+  ];
+
+  console.log('🧪 Testing known password combinations...');
+  
+  for (const testCase of testCases) {
+    const isValid = await bcrypt.compare(testCase.password, testCase.expectedHash);
+    console.log(`🔐 ${testCase.email}: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
+  }
+};
+
 // Utility function to set up initial admin user (updated to use consistent salt rounds)
 export const setupInitialAdmin = async (email: string, password: string) => {
   const { supabase } = await import('@/integrations/supabase/client');

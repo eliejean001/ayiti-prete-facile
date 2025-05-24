@@ -52,12 +52,24 @@ export const authenticateAdmin = async (email: string, password: string): Promis
 
     // Compare password with bcrypt hash
     console.log('🔍 Comparing password with stored hash...');
+    console.log('🔑 Password to compare:', password);
+    console.log('🔐 Stored hash:', adminUser.password_hash);
+    
     const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
 
     console.log('🔐 Password comparison result:', passwordMatches);
 
     if (!passwordMatches) {
       console.warn("❌ Password does not match stored hash");
+      
+      // Additional debugging - test with known working combinations
+      if (email === 'fastloan633@gmail.com' && password === 'AdminPassword2025!') {
+        console.log('🧪 Testing with known hash for fastloan633@gmail.com...');
+        const knownHash = '$2a$12$ZQWsuLO16i88SWlUTBSyOe7L8Ec8XKmNI8TJ1kPW8/6Vn6X8VJf8u';
+        const knownTest = await bcrypt.compare(password, knownHash);
+        console.log('🧪 Known hash test result:', knownTest);
+      }
+      
       return false;
     }
 
