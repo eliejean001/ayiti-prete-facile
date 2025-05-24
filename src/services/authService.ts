@@ -1,3 +1,4 @@
+
 import bcrypt from 'bcryptjs';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,6 +10,8 @@ export const isAuthenticated = (): boolean => {
 // Authenticate admin with email and password
 export const authenticateAdmin = async (email: string, password: string): Promise<boolean> => {
   try {
+    console.log('🔐 Starting admin authentication for:', email);
+    
     // Get admin user by email and select required fields
     const { data, error } = await supabase
       .from('admin_users')
@@ -16,8 +19,13 @@ export const authenticateAdmin = async (email: string, password: string): Promis
       .eq('email', email)
       .maybeSingle();
 
-    if (error || !data) {
-      console.error("❌ Authentication error:", error || "Admin user not found");
+    if (error) {
+      console.error("❌ Database error during authentication:", error);
+      return false;
+    }
+    
+    if (!data) {
+      console.error("❌ Admin user not found for email:", email);
       return false;
     }
 
@@ -28,33 +36,41 @@ export const authenticateAdmin = async (email: string, password: string): Promis
       role: string;
     };
 
-    // Debug logs
-    console.log("✅ Entered email:", email);
-    console.log("✅ Entered password:", password);
-    console.log("🔐 Hash from DB:", adminUser.password_hash);
+    console.log("✅ Found admin user:", {
+      id: adminUser.id,
+      email: adminUser.email,
+      role: adminUser.role,
+      hashLength: adminUser.password_hash.length,
+      hashPrefix: adminUser.password_hash.substring(0, 7)
+    });
 
-    // Compare password with bcrypt hash
-    const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
-
-    if (!passwordMatches) {
-      console.warn("❌ Password does not match bcrypt hash");
+    // Confirm admin role first
+    if (adminUser.role !== 'admin') {
+      console.warn("❌ User does not have 'admin' role. Role:", adminUser.role);
       return false;
     }
 
-    // Confirm admin role
-    if (adminUser.role !== 'admin') {
-      console.warn("❌ User does not have 'admin' role");
+    // Compare password with bcrypt hash
+    console.log('🔍 Comparing password with stored hash...');
+    const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
+
+    console.log('🔐 Password comparison result:', passwordMatches);
+
+    if (!passwordMatches) {
+      console.warn("❌ Password does not match stored hash");
       return false;
     }
 
     // Save session
     sessionStorage.setItem('adminAuthenticated', 'true');
     sessionStorage.setItem('adminEmail', email);
-    console.log("✅ Authentication successful");
+    sessionStorage.setItem('adminId', adminUser.id);
+    
+    console.log("✅ Authentication successful for:", email);
     return true;
 
   } catch (error) {
-    console.error("❌ Unexpected error during login:", error);
+    console.error("❌ Unexpected error during authentication:", error);
     return false;
   }
 };
@@ -63,4 +79,15 @@ export const authenticateAdmin = async (email: string, password: string): Promis
 export const logoutAdmin = (): void => {
   sessionStorage.removeItem('adminAuthenticated');
   sessionStorage.removeItem('adminEmail');
+  sessionStorage.removeItem('adminId');
+  console.log('🚪 Admin logged out successfully');
+};
+
+// Get current admin info
+export const getCurrentAdmin = () => {
+  return {
+    isAuthenticated: isAuthenticated(),
+    email: sessionStorage.getItem('adminEmail'),
+    id: sessionStorage.getItem('adminId')
+  };
 };

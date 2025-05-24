@@ -1,11 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { setupInitialAdmin } from '@/utils/passwordUtils';
+import { setupDefaultAdmins, testAdminLogin } from '@/utils/adminSetup';
 
 interface AdminSetupProps {
   onSetupComplete: () => void;
@@ -17,6 +17,40 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [setupStatus, setSetupStatus] = useState<string>('');
+
+  // Auto-setup default admins on component mount
+  useEffect(() => {
+    const autoSetup = async () => {
+      try {
+        console.log('🚀 Auto-setting up default admin accounts...');
+        const successfulAdmins = await setupDefaultAdmins();
+        
+        if (successfulAdmins.length > 0) {
+          setSetupStatus(`✅ Default admin accounts ready. You can use: ${successfulAdmins.map(a => a.email).join(', ')}`);
+          
+          // Test the first admin account
+          const firstAdmin = successfulAdmins[0];
+          const loginTest = await testAdminLogin(firstAdmin.email, firstAdmin.password);
+          
+          if (loginTest) {
+            console.log('✅ Admin login test passed');
+            toast({
+              title: "Admin Setup Complete",
+              description: `Default admin accounts are ready. Test credentials: ${firstAdmin.email}`,
+            });
+          } else {
+            console.warn('⚠️ Admin login test failed');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Auto-setup failed:', error);
+        setSetupStatus('⚠️ Auto-setup encountered issues. Manual setup available below.');
+      }
+    };
+    
+    autoSetup();
+  }, [toast]);
 
   const handleSetup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,10 +73,10 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
       return;
     }
     
-    if (password.length < 12) {
+    if (password.length < 8) {
       toast({
         title: "Error",
-        description: "Password must be at least 12 characters long.",
+        description: "Password must be at least 8 characters long.",
         variant: "destructive"
       });
       return;
@@ -51,12 +85,25 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
     setIsLoading(true);
     
     try {
+      const { setupInitialAdmin } = await import('@/utils/passwordUtils');
       await setupInitialAdmin(email, password);
-      toast({
-        title: "Success",
-        description: "Admin account created successfully.",
-      });
-      onSetupComplete();
+      
+      // Test the login
+      const loginTest = await testAdminLogin(email, password);
+      
+      if (loginTest) {
+        toast({
+          title: "Success",
+          description: `Admin account created and tested successfully for ${email}`,
+        });
+        onSetupComplete();
+      } else {
+        toast({
+          title: "Warning",
+          description: "Admin account created but login test failed. Please try logging in.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       console.error("Setup error:", error);
       toast({
@@ -73,10 +120,15 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
     <div className="container mx-auto flex justify-center items-center min-h-[calc(100vh-12rem)]">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Initial Setup</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Admin Setup</CardTitle>
           <CardDescription className="text-center">
-            Create your first admin account
+            Set up administrator accounts
           </CardDescription>
+          {setupStatus && (
+            <div className="text-sm text-center p-2 bg-blue-50 rounded">
+              {setupStatus}
+            </div>
+          )}
         </CardHeader>
         <form onSubmit={handleSetup}>
           <CardContent className="space-y-4">
@@ -87,7 +139,7 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+                placeholder="Enter admin email"
               />
             </div>
             <div className="space-y-2">
@@ -97,7 +149,7 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+                placeholder="Enter password"
               />
             </div>
             <div className="space-y-2">
@@ -107,7 +159,7 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required
+                placeholder="Confirm password"
               />
             </div>
           </CardContent>
@@ -123,7 +175,7 @@ const AdminSetup = ({ onSetupComplete }: AdminSetupProps) => {
                   Setting up...
                 </>
               ) : (
-                'Create Admin Account'
+                'Create Additional Admin Account'
               )}
             </Button>
           </CardFooter>
