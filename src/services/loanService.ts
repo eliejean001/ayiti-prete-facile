@@ -1,4 +1,3 @@
-
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -285,6 +284,28 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
     };
   } catch (error) {
     console.error("Payment status update failed with exception:", error);
+    throw error;
+  }
+};
+
+export const deleteApplication = async (id: string): Promise<boolean> => {
+  console.log(`Deleting loan application with id: ${id}`);
+  
+  try {
+    const { error } = await supabase
+      .from('loan_applications')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error("Error deleting loan application:", error);
+      throw error;
+    }
+    
+    console.log("Loan application deleted successfully");
+    return true;
+  } catch (error) {
+    console.error("Delete operation failed:", error);
     throw error;
   }
 };

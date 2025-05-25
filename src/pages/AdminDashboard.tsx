@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,9 +9,20 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { getAllApplications, updatePaymentStatus } from '@/services/loanService';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { getAllApplications, updatePaymentStatus, deleteApplication } from '@/services/loanService';
 import { LoanApplication } from '@/types/loan';
-import { Download, CheckCircle2 } from 'lucide-react';
+import { Download, CheckCircle2, Trash2 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -22,6 +32,7 @@ const AdminDashboard = () => {
   const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     loadApplications();
@@ -71,6 +82,31 @@ const AdminDashboard = () => {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteApplication = async (applicationId: string) => {
+    setIsDeleting(applicationId);
+    try {
+      const success = await deleteApplication(applicationId);
+      if (success) {
+        toast({
+          title: "Demande Supprimée",
+          description: "La demande de prêt a été supprimée avec succès.",
+        });
+        setApplications(apps => apps.filter(app => app.id !== applicationId));
+        if (selectedApplication && selectedApplication.id === applicationId) {
+          setSelectedApplication(null);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la demande de prêt.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(null);
     }
   };
 
@@ -187,6 +223,36 @@ const AdminDashboard = () => {
                               Marquer Payé
                             </Button>
                           )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isDeleting === application.id}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Supprimer
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Êtes-vous sûr de vouloir supprimer la demande de prêt de {application.fullName} ? 
+                                  Cette action est irréversible.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteApplication(application.id)}
+                                  className="bg-red-600 hover:bg-red-700"
+                                >
+                                  Supprimer
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>
