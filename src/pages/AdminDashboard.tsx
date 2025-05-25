@@ -1,6 +1,5 @@
+
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -11,52 +10,22 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
-import { logoutAdmin } from '@/services/authService';
 import { getAllApplications, updatePaymentStatus } from '@/services/loanService';
 import { LoanApplication } from '@/types/loan';
-import { Download, LogOut, CheckCircle2 } from 'lucide-react';
+import { Download, CheckCircle2 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { useToast } from '@/components/ui/use-toast';
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
-    const checkAdminRole = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (!user) {
-        navigate('/admin');
-        return;
-      }
-
-      const { data, error: roleError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      const adminData = data as unknown as {
-        role: string;
-      };
-
-      if (!adminData || adminData.role !== 'admin') {
-        navigate('/');
-        return;
-      }
-
-      loadApplications();
-      setCheckingRole(false);
-    };
-
-    checkAdminRole();
-  }, [navigate]);
+    loadApplications();
+  }, []);
 
   const loadApplications = async () => {
     try {
@@ -72,11 +41,6 @@ const AdminDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    logoutAdmin();
-    navigate('/admin');
   };
 
   const handleViewApplication = (application: LoanApplication) => {
@@ -146,17 +110,195 @@ const AdminDashboard = () => {
     }).format(amount);
   };
 
-  if (checkingRole) return <div>Chargement...</div>;
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-primary">Tableau de Bord Administratif</h1>
-        <Button variant="outline" onClick={handleLogout}>
-          <LogOut className="h-4 w-4 mr-2" /> Déconnexion
-        </Button>
       </div>
-      {/* Your application list and details section remains unchanged here */}
+
+      {/* Applications List */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Demandes de Prêt ({applications.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8">Chargement des demandes...</div>
+          ) : applications.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Aucune demande de prêt trouvée</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom Complet</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Paiement</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {applications.map((application) => (
+                    <TableRow key={application.id}>
+                      <TableCell className="font-medium">{application.fullName}</TableCell>
+                      <TableCell>{application.email}</TableCell>
+                      <TableCell>{formatCurrency(application.loanAmount)}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          application.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          application.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {application.status === 'approved' ? 'Approuvé' :
+                           application.status === 'rejected' ? 'Rejeté' : 'En attente'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          application.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
+                          application.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {application.paymentStatus === 'paid' ? 'Payé' :
+                           application.paymentStatus === 'pending' ? 'En attente' : 'Non payé'}
+                        </span>
+                      </TableCell>
+                      <TableCell>{formatDate(application.createdAt)}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewApplication(application)}
+                          >
+                            Voir
+                          </Button>
+                          {application.paymentStatus !== 'paid' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMarkAsPaid(application.id)}
+                              disabled={isUpdating}
+                            >
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
+                              Marquer Payé
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Application Details */}
+      {selectedApplication && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Détails de la Demande</CardTitle>
+            <div className="flex gap-2">
+              <Button onClick={downloadApplicationAsPdf} variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Télécharger PDF
+              </Button>
+              <Button onClick={() => setSelectedApplication(null)} variant="outline">
+                Fermer
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div id="application-details" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Informations Personnelles</h3>
+                  <div className="space-y-2">
+                    <p><strong>Nom Complet:</strong> {selectedApplication.fullName}</p>
+                    <p><strong>Email:</strong> {selectedApplication.email}</p>
+                    <p><strong>Téléphone:</strong> {selectedApplication.phoneNumber}</p>
+                    <p><strong>Adresse:</strong> {selectedApplication.address}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Détails du Prêt</h3>
+                  <div className="space-y-2">
+                    <p><strong>Montant:</strong> {formatCurrency(selectedApplication.loanAmount)}</p>
+                    <p><strong>Durée:</strong> {selectedApplication.loanDuration} mois</p>
+                    <p><strong>Taux d'intérêt:</strong> {selectedApplication.interestRate}%</p>
+                    <p><strong>Objectif:</strong> {selectedApplication.loanPurpose}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Informations Professionnelles</h3>
+                  <div className="space-y-2">
+                    <p><strong>Statut d'emploi:</strong> {selectedApplication.employmentStatus}</p>
+                    <p><strong>Employeur:</strong> {selectedApplication.employer}</p>
+                    <p><strong>Poste:</strong> {selectedApplication.jobTitle}</p>
+                    <p><strong>Années d'emploi:</strong> {selectedApplication.yearsEmployed}</p>
+                    <p><strong>Revenu mensuel:</strong> {selectedApplication.monthlyIncome ? formatCurrency(selectedApplication.monthlyIncome) : 'N/A'}</p>
+                    <p><strong>Téléphone employeur:</strong> {selectedApplication.employerPhone}</p>
+                    <p><strong>Adresse employeur:</strong> {selectedApplication.employerAddress}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Référence</h3>
+                  <div className="space-y-2">
+                    <p><strong>Nom:</strong> {selectedApplication.referenceName}</p>
+                    <p><strong>Téléphone:</strong> {selectedApplication.referencePhone}</p>
+                    <p><strong>Adresse:</strong> {selectedApplication.referenceAddress}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Statut et Dates</h3>
+                <div className="space-y-2">
+                  <p><strong>Statut de la demande:</strong> 
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                      selectedApplication.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      selectedApplication.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                      'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {selectedApplication.status === 'approved' ? 'Approuvé' :
+                       selectedApplication.status === 'rejected' ? 'Rejeté' : 'En attente'}
+                    </span>
+                  </p>
+                  <p><strong>Statut de paiement:</strong>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                      selectedApplication.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' :
+                      selectedApplication.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {selectedApplication.paymentStatus === 'paid' ? 'Payé' :
+                       selectedApplication.paymentStatus === 'pending' ? 'En attente' : 'Non payé'}
+                    </span>
+                  </p>
+                  <p><strong>Date de création:</strong> {formatDate(selectedApplication.createdAt)}</p>
+                  <p><strong>Dernière mise à jour:</strong> {formatDate(selectedApplication.updatedAt)}</p>
+                </div>
+              </div>
+
+              {selectedApplication.signature && (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-primary">Signature</h3>
+                  <div className="border rounded p-4">
+                    <img src={selectedApplication.signature} alt="Signature" className="max-w-xs" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
