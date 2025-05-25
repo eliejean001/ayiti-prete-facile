@@ -145,7 +145,7 @@ const AdminDashboard = () => {
                     <TableRow key={application.id}>
                       <TableCell className="font-medium">{application.fullName}</TableCell>
                       <TableCell>{application.email}</TableCell>
-                      <TableCell>{formatCurrency(application.loanAmount)}</TableCell>
+                      <TableCell>{formatCurrency(application.amount)}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${
                           application.status === 'approved' ? 'bg-green-100 text-green-800' :
@@ -221,7 +221,7 @@ const AdminDashboard = () => {
                   <div className="space-y-2">
                     <p><strong>Nom Complet:</strong> {selectedApplication.fullName}</p>
                     <p><strong>Email:</strong> {selectedApplication.email}</p>
-                    <p><strong>Téléphone:</strong> {selectedApplication.phoneNumber}</p>
+                    <p><strong>Téléphone:</strong> {selectedApplication.phone}</p>
                     <p><strong>Adresse:</strong> {selectedApplication.address}</p>
                   </div>
                 </div>
@@ -229,21 +229,18 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-primary">Détails du Prêt</h3>
                   <div className="space-y-2">
-                    <p><strong>Montant:</strong> {formatCurrency(selectedApplication.loanAmount)}</p>
-                    <p><strong>Durée:</strong> {selectedApplication.loanDuration} mois</p>
+                    <p><strong>Montant:</strong> {formatCurrency(selectedApplication.amount)}</p>
+                    <p><strong>Durée:</strong> {selectedApplication.duration} mois</p>
                     <p><strong>Taux d'intérêt:</strong> {selectedApplication.interestRate}%</p>
-                    <p><strong>Objectif:</strong> {selectedApplication.loanPurpose}</p>
+                    <p><strong>Objectif:</strong> {selectedApplication.reason}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-primary">Informations Professionnelles</h3>
                   <div className="space-y-2">
-                    <p><strong>Statut d'emploi:</strong> {selectedApplication.employmentStatus}</p>
-                    <p><strong>Employeur:</strong> {selectedApplication.employer}</p>
-                    <p><strong>Poste:</strong> {selectedApplication.jobTitle}</p>
-                    <p><strong>Années d'emploi:</strong> {selectedApplication.yearsEmployed}</p>
-                    <p><strong>Revenu mensuel:</strong> {selectedApplication.monthlyIncome ? formatCurrency(selectedApplication.monthlyIncome) : 'N/A'}</p>
+                    <p><strong>Statut d'emploi:</strong> {selectedApplication.employment}</p>
+                    <p><strong>Employeur:</strong> {selectedApplication.employerName}</p>
                     <p><strong>Téléphone employeur:</strong> {selectedApplication.employerPhone}</p>
                     <p><strong>Adresse employeur:</strong> {selectedApplication.employerAddress}</p>
                   </div>
@@ -283,18 +280,15 @@ const AdminDashboard = () => {
                     </span>
                   </p>
                   <p><strong>Date de création:</strong> {formatDate(selectedApplication.createdAt)}</p>
-                  <p><strong>Dernière mise à jour:</strong> {formatDate(selectedApplication.updatedAt)}</p>
                 </div>
               </div>
 
-              {selectedApplication.signature && (
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-primary">Signature</h3>
-                  <div className="border rounded p-4">
-                    <img src={selectedApplication.signature} alt="Signature" className="max-w-xs" />
-                  </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-primary">Signature</h3>
+                <div className="border rounded p-4">
+                  <p><strong>Nom du signataire:</strong> {selectedApplication.signatureFullName}</p>
                 </div>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
