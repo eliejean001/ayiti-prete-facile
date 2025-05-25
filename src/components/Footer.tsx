@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const isMobile = useIsMobile();
@@ -22,9 +23,19 @@ const Footer: React.FC = () => {
             <p className="text-sm">Adresse: 4, rue Bethanie, Delmas 75 Carradeux</p>
           </div>
           <div className={isMobile ? "text-center" : ""}>
-            <h3 className="text-lg font-bold mb-4">Heures d'Ouverture</h3>
-            <p className="text-sm mb-2">Lun - Ven: 8h30 - 16h30</p>
-            <p className="text-sm">Sam: 9h00 - 13h00</p>
+            <h3 className="text-lg font-bold mb-4">Liens Utiles</h3>
+            <div className="space-y-2">
+              <div>
+                <Link 
+                  to="/conditions" 
+                  className="text-sm hover:text-gray-300 transition-colors"
+                >
+                  Conditions Générales
+                </Link>
+              </div>
+              <p className="text-sm">Lun - Ven: 8h30 - 16h30</p>
+              <p className="text-sm">Sam: 9h00 - 13h00</p>
+            </div>
           </div>
         </div>
         <div className="border-t border-gray-700 mt-6 pt-6 text-center">
