@@ -13,6 +13,7 @@ import PaymentCallback from "./pages/PaymentCallback";
 import PaymentConfirmation from "./pages/PaymentConfirmation";
 import AdminDashboard from "./pages/AdminDashboard";
 import About from "./pages/About";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/confirmation" element={<PaymentConfirmation />} />
               <Route path="/adminjaya-189087" element={<AdminDashboard />} />
               <Route path="/about" element={<About />} />
+              <Route path="/conditions" element={<TermsAndConditions />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

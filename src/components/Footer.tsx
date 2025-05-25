@@ -17,9 +17,9 @@ const Footer: React.FC = () => {
           </div>
           <div className={isMobile ? "text-center" : ""}>
             <h3 className="text-lg font-bold mb-4">Contact</h3>
-            <p className="text-sm mb-2">Email: contact@ayitiloan.ht</p>
-            <p className="text-sm mb-2">Téléphone: +509 2946 7890</p>
-            <p className="text-sm">Adresse: Port-au-Prince, Haïti</p>
+            <p className="text-sm mb-2">Email: contact@ayitiloan.com</p>
+            <p className="text-sm mb-2">Téléphone: +509 3687 2957</p>
+            <p className="text-sm">Adresse: 4, rue Bethanie, Delmas 75 Carradeux</p>
           </div>
           <div className={isMobile ? "text-center" : ""}>
             <h3 className="text-lg font-bold mb-4">Heures d'Ouverture</h3>
