@@ -423,7 +423,7 @@ const LoanApplicationForm = () => {
                 required
               />
               <p className="text-sm text-gray-500">
-                Envoyez votre carte d'identité nationale, 2 photos d'identité et une preuve d'adresse à cette adresse: <strong>documents@ayitiloan.ht</strong>
+                Envoyez votre carte d'identité nationale, 2 photos d'identité et une preuve d'adresse à cette adresse: <strong>documents@ayitiloan.com</strong>
               </p>
             </div>
           </CardContent>
