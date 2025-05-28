@@ -48,9 +48,6 @@ const Payment = () => {
     }).format(amount);
   };
 
-  // QR Code placeholder URL - In production, this would be a real MonCash QR code URL
-  const qrCodeUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MONCASH:PAYMENT:AYITILOAN:1000HTG";
-
   return (
     <div className="container mx-auto py-8 px-4 max-w-md">
       <h1 className="text-3xl font-bold mb-6 text-primary text-center">Paiement des Frais</h1>
@@ -91,9 +88,9 @@ const Payment = () => {
           <div className="flex flex-col items-center justify-center">
             <div className="bg-white p-4 border rounded-lg shadow-sm">
               <img 
-                src={qrCodeUrl}
+                src="/lovable-uploads/c164f657-192e-4bc4-9534-e8e2622bde50.png"
                 alt="Code QR MonCash"
-                className="w-full h-auto"
+                className="w-full h-auto max-w-[200px]"
               />
             </div>
             <p className="text-center text-sm font-semibold mt-4">Scannez ce code avec votre application MonCash</p>
