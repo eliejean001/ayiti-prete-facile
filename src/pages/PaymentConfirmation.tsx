@@ -21,7 +21,7 @@ const PaymentConfirmation = () => {
         <div className="bg-gray-50 p-6 rounded-lg w-full text-left">
           <h3 className="font-bold mb-3">Prochaines étapes:</h3>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
-            <li>Envoyez votre carte d'identité nationale, 2 photos d'identité et une preuve d'adresse à <strong>documents@ayitiloan.ht</strong></li>
+            <li>Envoyez votre carte d'identité nationale, 2 photos d'identité et une preuve d'adresse à <strong>documents@ayitiloan.com</strong></li>
             <li>Notre équipe analysera votre dossier dans les 48 heures</li>
             <li>Vous recevrez une notification par email concernant la décision</li>
           </ul>
