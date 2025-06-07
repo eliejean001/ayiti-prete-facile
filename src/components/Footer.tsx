@@ -20,7 +20,6 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-bold mb-4">Contact</h3>
             <p className="text-sm mb-2">Email: contact@ayitiloan.com</p>
             <p className="text-sm mb-2">Téléphone: +509 3687 2957</p>
-            <p className="text-sm mb-2">Natcash: +509 4035 3657</p>
             <p className="text-sm">Adresse: 4, rue Bethanie, Delmas 75 Carradeux</p>
           </div>
           <div className={isMobile ? "text-center" : ""}>
