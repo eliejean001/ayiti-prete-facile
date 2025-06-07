@@ -117,13 +117,11 @@ const Payment = () => {
               <h4 className="font-semibold text-lg mb-3 text-center">Natcash</h4>
               <div className="flex flex-col items-center justify-center">
                 <div className="bg-white p-4 border rounded-lg shadow-sm">
-                  {/* Placeholder for Natcash QR - user would need to upload this */}
-                  <div className="w-[200px] h-[200px] bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <QrCode className="h-12 w-12 mx-auto mb-2" />
-                      <p className="text-sm">QR Code Natcash</p>
-                    </div>
-                  </div>
+                  <img 
+                    src="/lovable-uploads/21b917e6-0beb-4dd3-9e6f-885325fdf624.png"
+                    alt="Code QR Natcash"
+                    className="w-full h-auto max-w-[200px]"
+                  />
                 </div>
                 <p className="text-center text-sm font-semibold mt-2">Scannez ce code avec votre application Natcash</p>
                 
@@ -132,7 +130,7 @@ const Payment = () => {
                     <Phone className="h-4 w-4" />
                     <span className="font-medium">Pas de QR? Envoyez à:</span>
                   </div>
-                  <p className="font-bold text-center text-lg">+509 4235 4678</p>
+                  <p className="font-bold text-center text-lg">+509 4035 3657</p>
                 </div>
               </div>
             </div>
