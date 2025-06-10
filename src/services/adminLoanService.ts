@@ -11,17 +11,27 @@ export const updatePaymentStatusAsAdmin = async (
   console.log(`Admin ${adminId} updating payment status for application ${applicationId} to ${paymentStatus}`);
   
   try {
-    // Verify admin exists
+    // First verify the admin ID is valid
+    if (!adminId || adminId.trim() === '') {
+      throw new Error("Invalid admin ID provided");
+    }
+    
+    // Verify admin exists and has proper role
     const { data: adminData, error: adminError } = await supabase
       .from('admin_users')
       .select('id, role')
       .eq('id', adminId)
       .eq('role', 'admin')
-      .single();
+      .maybeSingle();
       
-    if (adminError || !adminData) {
+    if (adminError) {
       console.error("❌ Admin verification failed:", adminError);
-      throw new Error("Unauthorized: Invalid admin credentials");
+      throw new Error(`Admin verification failed: ${adminError.message}`);
+    }
+    
+    if (!adminData) {
+      console.error("❌ Admin not found or invalid role for ID:", adminId);
+      throw new Error("Unauthorized: Invalid admin credentials or insufficient permissions");
     }
     
     console.log("✅ Admin verified:", adminData);
@@ -31,7 +41,7 @@ export const updatePaymentStatusAsAdmin = async (
     
     console.log(`Updating database with payment_status: ${dbPaymentStatus}`);
     
-    // Perform the update using service role or admin context
+    // Perform the update - this should work now with the proper RLS policy
     const { data, error } = await supabase
       .from('loan_applications')
       .update({ 
@@ -45,7 +55,7 @@ export const updatePaymentStatusAsAdmin = async (
     if (error) {
       console.error("❌ Error updating payment status:", error);
       console.error("Error details:", JSON.stringify(error, null, 2));
-      throw error;
+      throw new Error(`Failed to update payment status: ${error.message}`);
     }
     
     console.log("✅ Payment status updated successfully:", data);
