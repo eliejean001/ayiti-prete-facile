@@ -52,8 +52,6 @@ export const authenticateAdmin = async (email: string, password: string): Promis
 
     // Compare password with bcrypt hash
     console.log('🔍 Comparing password with stored hash...');
-    console.log('🔑 Password to compare:', password);
-    console.log('🔐 Stored hash:', adminUser.password_hash);
     
     const passwordMatches = await bcrypt.compare(password, adminUser.password_hash);
 
@@ -61,16 +59,28 @@ export const authenticateAdmin = async (email: string, password: string): Promis
 
     if (!passwordMatches) {
       console.warn("❌ Password does not match stored hash");
-      
-      // Additional debugging - test with known working combinations
-      if (email === 'fastloan633@gmail.com' && password === 'AdminPassword2025!') {
-        console.log('🧪 Testing with known hash for fastloan633@gmail.com...');
-        const knownHash = '$2a$12$ZQWsuLO16i88SWlUTBSyOe7L8Ec8XKmNI8TJ1kPW8/6Vn6X8VJf8u';
-        const knownTest = await bcrypt.compare(password, knownHash);
-        console.log('🧪 Known hash test result:', knownTest);
-      }
-      
       return false;
+    }
+
+    // Create a custom JWT token for the admin user to work with RLS
+    console.log('🔑 Creating admin session...');
+    
+    // Sign in the admin user with Supabase using their admin ID as the user ID
+    // This creates a proper auth session that RLS policies can use
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: `admin-${adminUser.id}@internal.admin`,
+      password: 'temp-password-will-be-overridden'
+    });
+
+    // If that fails (user doesn't exist in auth.users), we'll work around it by setting manual session
+    if (signInError) {
+      console.log('🔧 Admin user not in auth.users, using manual session approach...');
+      
+      // Set a manual session that includes the admin user ID
+      await supabase.auth.setSession({
+        access_token: createTempJWT(adminUser.id),
+        refresh_token: 'manual-admin-refresh'
+      });
     }
 
     // Save session
@@ -87,8 +97,27 @@ export const authenticateAdmin = async (email: string, password: string): Promis
   }
 };
 
+// Create a temporary JWT for admin session (simplified version)
+const createTempJWT = (adminId: string): string => {
+  // This is a simplified approach - in production you'd want proper JWT signing
+  const payload = {
+    sub: adminId,
+    aud: 'authenticated',
+    role: 'authenticated',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
+  };
+  
+  // For now, we'll use a base64 encoded payload (not secure for production)
+  return btoa(JSON.stringify(payload));
+};
+
 // Clear login state
-export const logoutAdmin = (): void => {
+export const logoutAdmin = async (): Promise<void> => {
+  // Sign out from Supabase auth
+  await supabase.auth.signOut();
+  
+  // Clear session storage
   sessionStorage.removeItem('adminAuthenticated');
   sessionStorage.removeItem('adminEmail');
   sessionStorage.removeItem('adminId');

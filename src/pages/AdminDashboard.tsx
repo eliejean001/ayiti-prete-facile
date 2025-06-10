@@ -20,11 +20,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { getAllApplications, updatePaymentStatus, deleteApplication } from '@/services/loanService';
+import { getAllApplications, deleteApplication } from '@/services/loanService';
+import { updatePaymentStatusAsAdmin } from '@/services/adminLoanService';
 import { LoanApplication } from '@/types/loan';
 import { Download, CheckCircle2, Trash2 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { useToast } from '@/components/ui/use-toast';
+import { getCurrentAdmin } from '@/services/authService';
 
 const AdminDashboard = () => {
   const { toast } = useToast();
@@ -61,7 +63,21 @@ const AdminDashboard = () => {
   const handleMarkAsPaid = async (applicationId: string) => {
     setIsUpdating(true);
     try {
-      const updatedApplication = await updatePaymentStatus(applicationId, 'paid');
+      const currentAdmin = getCurrentAdmin();
+      
+      if (!currentAdmin.isAuthenticated || !currentAdmin.id) {
+        toast({
+          title: "Erreur d'Authentification",
+          description: "Session administrateur expirée. Veuillez vous reconnecter.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      console.log("Marking application as paid with admin ID:", currentAdmin.id);
+      
+      const updatedApplication = await updatePaymentStatusAsAdmin(applicationId, 'paid', currentAdmin.id);
+      
       if (updatedApplication) {
         toast({
           title: "Paiement Confirmé",
@@ -75,9 +91,10 @@ const AdminDashboard = () => {
         }
       }
     } catch (error) {
+      console.error("Error marking as paid:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le statut de paiement.",
+        description: `Impossible de mettre à jour le statut de paiement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
         variant: "destructive"
       });
     } finally {
