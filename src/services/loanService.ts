@@ -1,4 +1,3 @@
-
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -293,6 +292,14 @@ export const deleteApplication = async (id: string): Promise<boolean> => {
   console.log(`Attempting to delete loan application with id: ${id}`);
   
   try {
+    // Check current auth state
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('Current auth user:', user?.id);
+    
+    if (authError) {
+      console.error("Auth error:", authError);
+    }
+    
     // Verify the application exists before deletion
     const { data: existingApp, error: checkError } = await supabase
       .from('loan_applications')
@@ -311,6 +318,31 @@ export const deleteApplication = async (id: string): Promise<boolean> => {
     }
     
     console.log("Application exists, proceeding with deletion:", existingApp);
+    
+    // Check if we have admin permissions by verifying in admin_users table
+    const currentAdmin = getCurrentAdmin();
+    if (!currentAdmin.isAuthenticated || !currentAdmin.id) {
+      throw new Error("Admin authentication required");
+    }
+    
+    // Verify admin permissions
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('admin_users')
+      .select('id, role')
+      .eq('id', currentAdmin.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+      
+    if (adminError) {
+      console.error("Error verifying admin permissions:", adminError);
+      throw new Error(`Admin verification failed: ${adminError.message}`);
+    }
+    
+    if (!adminCheck) {
+      throw new Error("Insufficient admin permissions");
+    }
+    
+    console.log("Admin permissions verified, proceeding with deletion");
     
     // Perform the deletion with proper counting
     const { data, error, count } = await supabase
@@ -357,4 +389,19 @@ const validatePaymentStatus = (paymentStatus: string): LoanApplication["paymentS
   return validPaymentStatuses.includes(paymentStatus as LoanApplication["paymentStatus"]) 
     ? (paymentStatus as LoanApplication["paymentStatus"]) 
     : "pending";
+};
+
+// Import getCurrentAdmin function
+const getCurrentAdmin = () => {
+  const isAuth = sessionStorage.getItem('adminAuthenticated') === 'true';
+  const email = sessionStorage.getItem('adminEmail');
+  const id = sessionStorage.getItem('adminId');
+  const role = sessionStorage.getItem('adminRole');
+  
+  return {
+    isAuthenticated: isAuth,
+    email,
+    id,
+    role
+  };
 };

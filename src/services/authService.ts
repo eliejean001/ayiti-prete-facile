@@ -62,27 +62,55 @@ export const authenticateAdmin = async (email: string, password: string): Promis
       return false;
     }
 
-    // Create a simple auth session by signing in with the admin user ID
-    console.log('🔑 Creating admin session...');
+    // Create proper Supabase auth session using the admin's UUID
+    console.log('🔑 Creating proper Supabase auth session...');
     
-    // Create a temporary auth user for this admin session
-    // We'll use the admin's UUID as the auth.uid() for RLS
     try {
       // Sign out any existing session first
       await supabase.auth.signOut();
       
-      // Create a manual session for the admin
-      // This sets auth.uid() to the admin's ID which will work with our RLS policy
-      const authResponse = await supabase.auth.setSession({
-        access_token: createAdminJWT(adminUser.id),
-        refresh_token: `admin_refresh_${adminUser.id}`
+      // Sign in with the admin user ID using Supabase's signInWithPassword
+      // We'll create a temporary user in Supabase auth for this admin
+      const tempEmail = `admin-${adminUser.id}@internal.system`;
+      const tempPassword = `admin-session-${adminUser.id}`;
+      
+      // Try to sign in first, if it fails, create the user
+      let authResult = await supabase.auth.signInWithPassword({
+        email: tempEmail,
+        password: tempPassword
       });
-
-      if (authResponse.error) {
-        console.log('🔧 Manual session creation failed, using fallback approach...');
+      
+      if (authResult.error) {
+        console.log('🔧 Creating temporary auth user for admin...');
+        // Create the temp auth user
+        const signUpResult = await supabase.auth.signUp({
+          email: tempEmail,
+          password: tempPassword,
+          options: {
+            data: {
+              admin_id: adminUser.id,
+              is_admin: true
+            }
+          }
+        });
+        
+        if (signUpResult.error) {
+          console.error('❌ Failed to create temp auth user:', signUpResult.error);
+          // Fall back to manual session management
+        } else {
+          console.log('✅ Created temporary auth user for admin');
+          authResult = signUpResult;
+        }
       }
+      
+      if (!authResult.error && authResult.data.user) {
+        console.log('✅ Admin authenticated with Supabase auth system');
+        console.log('✅ Auth UID set to:', authResult.data.user.id);
+      }
+      
     } catch (sessionError) {
-      console.log('🔧 Session creation encountered error, continuing with manual auth...');
+      console.error('❌ Error setting up Supabase auth session:', sessionError);
+      // Continue with session storage fallback
     }
 
     // Save session data to sessionStorage
@@ -99,30 +127,6 @@ export const authenticateAdmin = async (email: string, password: string): Promis
     console.error("❌ Unexpected error during authentication:", error);
     return false;
   }
-};
-
-// Create a JWT token for admin session that Supabase will recognize
-const createAdminJWT = (adminId: string): string => {
-  const header = {
-    alg: 'HS256',
-    typ: 'JWT'
-  };
-  
-  const payload = {
-    sub: adminId,
-    aud: 'authenticated',
-    role: 'authenticated',
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24), // 24 hours
-    email: `admin-${adminId}@internal.admin`
-  };
-  
-  // Create a simple JWT (not cryptographically secure, but sufficient for our admin session)
-  const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '');
-  const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '');
-  const signature = btoa(`admin_signature_${adminId}`).replace(/=/g, '');
-  
-  return `${encodedHeader}.${encodedPayload}.${signature}`;
 };
 
 // Clear login state
