@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +26,7 @@ import { updatePaymentStatusAsAdmin } from '@/services/adminLoanService';
 import { LoanApplication } from '@/types/loan';
 import { Download, CheckCircle2, Trash2 } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { getCurrentAdmin } from '@/services/authService';
 
 const AdminDashboard = () => {
@@ -105,21 +106,36 @@ const AdminDashboard = () => {
   const handleDeleteApplication = async (applicationId: string) => {
     setIsDeleting(applicationId);
     try {
+      console.log("Starting deletion process for application:", applicationId);
+      
       const success = await deleteApplication(applicationId);
+      
       if (success) {
+        console.log("Delete operation successful, updating UI");
         toast({
           title: "Demande Supprimée",
           description: "La demande de prêt a été supprimée avec succès.",
         });
-        setApplications(apps => apps.filter(app => app.id !== applicationId));
+        
+        // Remove from local state only after successful deletion
+        setApplications(apps => {
+          const updatedApps = apps.filter(app => app.id !== applicationId);
+          console.log("Updated applications list:", updatedApps.length, "applications remaining");
+          return updatedApps;
+        });
+        
+        // Clear selected application if it was deleted
         if (selectedApplication && selectedApplication.id === applicationId) {
           setSelectedApplication(null);
         }
+      } else {
+        throw new Error("Delete operation returned false");
       }
     } catch (error) {
+      console.error("Delete operation failed:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer la demande de prêt.",
+        title: "Erreur de Suppression",
+        description: `Impossible de supprimer la demande de prêt: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
         variant: "destructive"
       });
     } finally {

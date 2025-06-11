@@ -1,3 +1,4 @@
+
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -289,20 +290,45 @@ export const updatePaymentStatus = async (id: string, paymentStatus: LoanApplica
 };
 
 export const deleteApplication = async (id: string): Promise<boolean> => {
-  console.log(`Deleting loan application with id: ${id}`);
+  console.log(`Attempting to delete loan application with id: ${id}`);
   
   try {
-    const { error } = await supabase
+    // Verify the application exists before deletion
+    const { data: existingApp, error: checkError } = await supabase
+      .from('loan_applications')
+      .select('id')
+      .eq('id', id)
+      .single();
+      
+    if (checkError) {
+      console.error("Error checking if application exists:", checkError);
+      if (checkError.code === 'PGRST116') {
+        throw new Error("Application not found or already deleted");
+      }
+      throw new Error(`Failed to verify application: ${checkError.message}`);
+    }
+    
+    console.log("Application exists, proceeding with deletion:", existingApp);
+    
+    // Perform the deletion
+    const { data, error, count } = await supabase
       .from('loan_applications')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select();
       
     if (error) {
       console.error("Error deleting loan application:", error);
-      throw error;
+      throw new Error(`Failed to delete application: ${error.message}`);
     }
     
-    console.log("Loan application deleted successfully");
+    // Check if any rows were actually deleted
+    if (!data || data.length === 0) {
+      console.error("No rows were deleted - this could indicate RLS policy issues");
+      throw new Error("Failed to delete application - no rows affected. Check admin permissions.");
+    }
+    
+    console.log("Loan application deleted successfully:", data);
     return true;
   } catch (error) {
     console.error("Delete operation failed:", error);
