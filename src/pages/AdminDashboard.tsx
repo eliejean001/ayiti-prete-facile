@@ -47,6 +47,7 @@ const AdminDashboard = () => {
       const allApps = await getAllApplications();
       setApplications(allApps);
     } catch (error) {
+      console.error("Error loading applications:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les demandes de prêt.",
@@ -108,6 +109,7 @@ const AdminDashboard = () => {
     try {
       console.log("Starting deletion process for application:", applicationId);
       
+      // Attempt to delete the application
       const success = await deleteApplication(applicationId);
       
       if (success) {
@@ -118,8 +120,8 @@ const AdminDashboard = () => {
         });
         
         // Remove from local state only after successful deletion
-        setApplications(apps => {
-          const updatedApps = apps.filter(app => app.id !== applicationId);
+        setApplications(prevApps => {
+          const updatedApps = prevApps.filter(app => app.id !== applicationId);
           console.log("Updated applications list:", updatedApps.length, "applications remaining");
           return updatedApps;
         });
@@ -128,16 +130,21 @@ const AdminDashboard = () => {
         if (selectedApplication && selectedApplication.id === applicationId) {
           setSelectedApplication(null);
         }
-      } else {
-        throw new Error("Delete operation returned false");
       }
     } catch (error) {
       console.error("Delete operation failed:", error);
+      
+      // Show specific error message to help with debugging
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       toast({
         title: "Erreur de Suppression",
-        description: `Impossible de supprimer la demande de prêt: ${error instanceof Error ? error.message : 'Erreur inconnue'}`,
+        description: `Impossible de supprimer la demande de prêt: ${errorMessage}`,
         variant: "destructive"
       });
+      
+      // If deletion failed, reload applications to ensure UI is in sync
+      console.log("Reloading applications after failed deletion to ensure UI consistency");
+      await loadApplications();
     } finally {
       setIsDeleting(null);
     }
