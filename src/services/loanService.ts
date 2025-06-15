@@ -1,5 +1,6 @@
 import { LoanApplication } from "../types/loan";
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentAdmin } from "@/services/authService";
 
 // Define an interface for the database response to include all fields we're using
 interface LoanApplicationDbResponse {
@@ -292,14 +293,15 @@ export const deleteApplication = async (id: string): Promise<boolean> => {
   console.log(`Attempting to delete loan application with id: ${id}`);
   
   try {
-    // Check current auth state
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log('Current auth user:', user?.id);
+    // Check admin authentication first
+    const currentAdmin = getCurrentAdmin();
+    console.log('Current admin state:', currentAdmin);
     
-    if (authError) {
-      console.error("Auth error:", authError);
+    if (!currentAdmin.isAuthenticated || !currentAdmin.id) {
+      console.error("Admin not authenticated or missing admin ID");
+      throw new Error("Admin authentication required. Please log in as admin.");
     }
-    
+
     // Verify the application exists before deletion
     const { data: existingApp, error: checkError } = await supabase
       .from('loan_applications')
@@ -319,13 +321,7 @@ export const deleteApplication = async (id: string): Promise<boolean> => {
     
     console.log("Application exists, proceeding with deletion:", existingApp);
     
-    // Check if we have admin permissions by verifying in admin_users table
-    const currentAdmin = getCurrentAdmin();
-    if (!currentAdmin.isAuthenticated || !currentAdmin.id) {
-      throw new Error("Admin authentication required");
-    }
-    
-    // Verify admin permissions
+    // Verify admin permissions in the database
     const { data: adminCheck, error: adminError } = await supabase
       .from('admin_users')
       .select('id, role')
@@ -339,12 +335,13 @@ export const deleteApplication = async (id: string): Promise<boolean> => {
     }
     
     if (!adminCheck) {
-      throw new Error("Insufficient admin permissions");
+      console.error("Admin not found in database or insufficient permissions");
+      throw new Error("Insufficient admin permissions. Please contact system administrator.");
     }
     
     console.log("Admin permissions verified, proceeding with deletion");
     
-    // Perform the deletion with proper counting
+    // Perform the deletion
     const { data, error, count } = await supabase
       .from('loan_applications')
       .delete({ count: 'exact' })
@@ -356,10 +353,10 @@ export const deleteApplication = async (id: string): Promise<boolean> => {
       throw new Error(`Failed to delete application: ${error.message}`);
     }
     
-    // Check if any rows were actually deleted using count
+    // Check if any rows were actually deleted
     if (count === 0 || !data || data.length === 0) {
-      console.error("No rows were deleted - this indicates RLS policy or permission issues");
-      throw new Error("Failed to delete application - no rows affected. Check admin permissions.");
+      console.error("No rows were deleted - this indicates permission issues");
+      throw new Error("Failed to delete application - no rows affected. This may be due to insufficient permissions.");
     }
     
     console.log(`Loan application deleted successfully. Deleted ${count} row(s):`, data);
