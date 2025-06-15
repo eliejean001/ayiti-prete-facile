@@ -387,18 +387,3 @@ const validatePaymentStatus = (paymentStatus: string): LoanApplication["paymentS
     ? (paymentStatus as LoanApplication["paymentStatus"]) 
     : "pending";
 };
-
-// Import getCurrentAdmin function
-const getCurrentAdmin = () => {
-  const isAuth = sessionStorage.getItem('adminAuthenticated') === 'true';
-  const email = sessionStorage.getItem('adminEmail');
-  const id = sessionStorage.getItem('adminId');
-  const role = sessionStorage.getItem('adminRole');
-  
-  return {
-    isAuthenticated: isAuth,
-    email,
-    id,
-    role
-  };
-};
